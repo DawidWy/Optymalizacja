@@ -1,4 +1,6 @@
 #include"opt_alg.h"
+#include"user_funs.h"
+#include <vector>
 
 solution MC(matrix(*ff)(matrix, matrix, matrix), int N, matrix lb, matrix ub, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
@@ -42,7 +44,38 @@ double* expansion(matrix(*ff)(matrix, matrix, matrix), double x0, double d, doub
 	try
 	{
 		double* p = new double[2] { 0, 0 };
-
+		vector <double> x = {x0};
+		double i = 0;
+		x[1] = x0 + d;
+		if(lab1(x[1]) == lab1(x[0]))
+		{
+			p[0] = x[0];
+			p[1] = x[1];
+			return p;
+		}
+		if(lab1(x[1])>lab1(x[0]))
+		{
+			d = -d;
+			x[1] = x0+d;
+			if(lab1(x[1])>=lab1(x[0])){
+				p[0] = x[1];
+				p[1] = x[0] -d;
+				return p;
+			}
+		}
+		while (lab1(x[i]) <= lab1(x[i+1]))
+		{
+			if(i>Nmax) throw "Przekroczono limit wywołań";
+			i++;
+			x[i+1] = x[0] + pow(alpha, i)*d;
+		}
+		if(d>0)
+		{
+			p[0] = x[i-1];
+			p[1] = x[i+1];
+		}
+		p[0] = x[i+1];
+		p[1] = x[i-1];
 		return p;
 	}
 	catch (string ex_info)
