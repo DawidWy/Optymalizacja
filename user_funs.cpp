@@ -33,3 +33,9 @@ matrix df0(double t, matrix Y, matrix ud1, matrix ud2)
 	dY(1) = ((t <= ud2(1)) * ud2(0) - m * g * l * sin(Y(0)) - b * Y(1)) / I;	// pochodna z pr�dko�ci to przyspieszenie
 	return dY;
 }
+
+matrix lab1(matrix x){
+	matrix y;
+	y = -cos(0.1 * x(0)) * pow(std::exp(1.0), pow(-0.1 * x(0) - 2 * M_PI, 2)) + 0.002 * pow(0.1 * x, 2);
+	return y;
+}
