@@ -1,6 +1,6 @@
 #include"opt_alg.h"
-#include"user_funs.h"
-#include <vector>
+#include<vector>
+#include<utility>
 
 solution MC(matrix(*ff)(matrix, matrix, matrix), int N, matrix lb, matrix ub, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
@@ -88,9 +88,35 @@ solution fib(matrix(*ff)(matrix, matrix, matrix), double a, double b, double eps
 {
 	try
 	{
+		vector<int> fibs;
+		int k;
+		{
+			int fe1, fe2;
+			fe1 = 1;
+			fe2 = 1;
+			double diff = (b - a)/epsilon;
+			for (k = 1;fe1 < diff;k++) {
+				fe1 += fe2;
+				fibs.push_back(fe1);
+				swap(fe1, fe2);
+			}
+		}
+		double a0 = a;
+		double b0 = b;
+		double c0 = b0 - (double)fibs[k-1] / (double)fibs[k] * (b0 - a0);
+		double d0 = a0 + b0 - c0;
+		for (int i = 0; i < k -3; i++) {
+			if (ff(c0, ud1, ud2) < ff(d0, ud1, ud2)) {
+				b0 = d0;
+			}
+			else {
+				a0 = c0;
+			}
+			c0 = b0 - (double)fibs[k-i-2] / (double)fibs[k-i-1] * (b0- a0);
+			d0 = a0 + b0 - c0;
+		}
 		solution Xopt;
-		//Tu wpisz kod funkcji
-
+		Xopt.x=c0;
 		return Xopt;
 	}
 	catch (string ex_info)
