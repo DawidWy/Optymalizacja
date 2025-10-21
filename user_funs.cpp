@@ -42,6 +42,10 @@ matrix lab1(matrix x){
 	return y;
 }
 
-matrix Faout(double a, double b, double Va, double Pa, matrix ud1){
-	return a * b * m2d(ud1) * sqrt((2 * g * Va) / Pa);
+matrix lab1dY(matrix x, matrix ud1, double a, double b, double Va, double Pa, double Db, double Pb, double Fin, double Tinb, double Ta0){
+	matrix y;
+	double Faout = a * b * m2d(ud1) * sqrt((2 * g * Va) / Pa);
+	y(0) = -1 * Faout;
+	y(1) = Faout - a * b * Db * sqrt((2 * g * y(0))/ Pb) + Fin;
+	y(2) = Fin/y(0) * (Tinb - y(1)) + Faout/y(0) * (Ta0 - y(1));
 }
