@@ -1,6 +1,5 @@
 #include"user_funs.h"
 
-const double g = 9.80665;
 
 matrix ff0T(matrix x, matrix ud1, matrix ud2)				// funkcja celu dla przypadku testowego
 {
