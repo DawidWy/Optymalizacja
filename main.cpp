@@ -85,6 +85,7 @@ void lab1()
 	double tend = 2000;
 	double dt = 1;
 	double Tmax = 50; 			// Maksymalna porządana temperatura w zbiorniku
+
 }
 
 void lab2()
