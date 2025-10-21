@@ -1,5 +1,7 @@
 #include"user_funs.h"
 
+const double g = 9.80665;
+
 matrix ff0T(matrix x, matrix ud1, matrix ud2)				// funkcja celu dla przypadku testowego
 {
 	matrix y;												// y zawiera warto�� funkcji celu
@@ -38,4 +40,8 @@ matrix lab1(matrix x){
 	matrix y;
 	y = -cos(0.1 * x(0)) * pow(std::exp(1.0), pow(-0.1 * x(0) - 2 * M_PI, 2)) + 0.002 * pow(0.1 * x(0), 2);
 	return y;
+}
+
+matrix Faout(double a, double b, double Va, double Pa, matrix ud1){
+	return a * b * m2d(ud1) * sqrt((2 * g * Va) / Pa);
 }
