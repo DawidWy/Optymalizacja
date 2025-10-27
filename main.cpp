@@ -1,14 +1,16 @@
 /*********************************************
-Kod stanowi uzupe³nienie materia³ów do æwiczeñ
+Kod stanowi uzupeï¿½nienie materiaï¿½ï¿½w do ï¿½wiczeï¿½
 w ramach przedmiotu metody optymalizacji.
-Kod udostêpniony na licencji CC BY-SA 3.0
-Autor: dr in¿. £ukasz Sztangret
+Kod udostï¿½pniony na licencji CC BY-SA 3.0
+Autor: dr inï¿½. ï¿½ukasz Sztangret
 Katedra Informatyki Stosowanej i Modelowania
-Akademia Górniczo-Hutnicza
+Akademia Gï¿½rniczo-Hutnicza
 Data ostatniej modyfikacji: 30.09.2025
 *********************************************/
 
+#include "matrix.h"
 #include"opt_alg.h"
+#include <cmath>
 
 void lab0();
 void lab1();
@@ -35,39 +37,54 @@ int main()
 void lab0()
 {
 	//Funkcja testowa
-	double epsilon = 1e-2;									// dok³adnoœæ
-	int Nmax = 10000;										// maksymalna liczba wywo³añ funkcji celu
-	matrix lb(2, 1, -5), ub(2, 1, 5),						// dolne oraz górne ograniczenie
-		a(2, 1);											// dok³adne rozwi¹zanie optymalne
-	solution opt;											// rozwi¹zanie optymalne znalezione przez algorytm
+	double epsilon = 1e-2;									// dokï¿½adnoï¿½ï¿½
+	int Nmax = 10000;										// maksymalna liczba wywoï¿½aï¿½ funkcji celu
+	matrix lb(2, 1, -5), ub(2, 1, 5),						// dolne oraz gï¿½rne ograniczenie
+		a(2, 1);											// dokï¿½adne rozwiï¿½zanie optymalne
+	solution opt;											// rozwiï¿½zanie optymalne znalezione przez algorytm
 	a(0) = -1;
 	a(1) = 2;
-	opt = MC(ff0T, 2, lb, ub, epsilon, Nmax, a);			// wywo³anie procedury optymalizacji
+	opt = MC(ff0T, 2, lb, ub, epsilon, Nmax, a);			// wywoï¿½anie procedury optymalizacji
 	cout << opt << endl << endl;							// wypisanie wyniku
-	solution::clear_calls();								// wyzerowanie liczników
+	solution::clear_calls();								// wyzerowanie licznikï¿½w
 
 	//Wahadlo
-	Nmax = 1000;											// dok³adnoœæ
-	epsilon = 1e-2;											// maksymalna liczba wywo³añ funkcji celu
-	lb = 0, ub = 5;											// dolne oraz górne ograniczenie
-	double teta_opt = 1;									// maksymalne wychylenie wahad³a
-	opt = MC(ff0R, 1, lb, ub, epsilon, Nmax, teta_opt);		// wywo³anie procedury optymalizacji
+	Nmax = 1000;											// dokï¿½adnoï¿½ï¿½
+	epsilon = 1e-2;											// maksymalna liczba wywoï¿½aï¿½ funkcji celu
+	lb = 0, ub = 5;											// dolne oraz gï¿½rne ograniczenie
+	double teta_opt = 1;									// maksymalne wychylenie wahadï¿½a
+	opt = MC(ff0R, 1, lb, ub, epsilon, Nmax, teta_opt);		// wywoï¿½anie procedury optymalizacji
 	cout << opt << endl << endl;							// wypisanie wyniku
-	solution::clear_calls();								// wyzerowanie liczników
+	solution::clear_calls();								// wyzerowanie licznikï¿½w
 
 	//Zapis symulacji do pliku csv
-	matrix Y0 = matrix(2, 1),								// Y0 zawiera warunki pocz¹tkowe
-		MT = matrix(2, new double[2] { m2d(opt.x), 0.5 });	// MT zawiera moment si³y dzia³aj¹cy na wahad³o oraz czas dzia³ania
-	matrix* Y = solve_ode(df0, 0, 0.1, 10, Y0, NAN, MT);	// rozwi¹zujemy równanie ró¿niczkowe
-	ofstream Sout("symulacja_lab0.csv");					// definiujemy strumieñ do pliku .csv
+	matrix Y0 = matrix(2, 1),								// Y0 zawiera warunki poczï¿½tkowe
+		MT = matrix(2, new double[2] { m2d(opt.x), 0.5 });	// MT zawiera moment siï¿½y dziaï¿½ajï¿½cy na wahadï¿½o oraz czas dziaï¿½ania
+	matrix* Y = solve_ode(df0, 0, 0.1, 10, Y0, NAN, MT);	// rozwiï¿½zujemy rï¿½wnanie rï¿½niczkowe
+	ofstream Sout("symulacja_lab0.csv");					// definiujemy strumieï¿½ do pliku .csv
 	Sout << hcat(Y[0], Y[1]);								// zapisyjemy wyniki w pliku
-	Sout.close();											// zamykamy strumieñ
-	Y[0].~matrix();											// usuwamy z pamiêci rozwi¹zanie RR
+	Sout.close();											// zamykamy strumieï¿½
+	Y[0].~matrix();											// usuwamy z pamiï¿½ci rozwiï¿½zanie RR
 	Y[1].~matrix();
 }
 
 void lab1()
 {
+	double Pa = 2; 				// Pole podstawy zbiornika A
+	double Va0 = 5; 			// ObjÄ™toÅ›Ä‡ wody w temperaturze Ta0
+	double Ta0 = 95; 			// Temperatura wody w C w zbiorniku B
+	double Pb = 1; 				// Pole podstawy zbiornika B
+	double Vb0 = 1; 			// ObjÄ™toÅ›Ä‡ wody w temperaturze Tb0
+	double Tb0 = 20; 			// Temperatura wody w C w zbiorniku B
+	double TinB = 20; 			// Temperatura wlewajÄ…cej siÄ™ wody do zbiornika B
+	double FinB = 10; 			// PrÄ™dkoÅ›Ä‡ wlewania siÄ™ wody do zbiornika B w l/s
+	double DB = 0.00365665; 	// Pole przekroju otworu z ktÃ³rego wylewa siÄ™ woda ze zbiornika B
+	double a = 0.98; 			// WspÃ³Å‚czynnik lepkoÅ›ci cieczy
+	double b = 0.63; 			// WspÃ³Å‚czynnik zawÄ™Å¼enia strumienia cieczy
+	double t0 = 0;
+	double tend = 2000;
+	double dt = 1;
+	double Tmax = 50; 			// Maksymalna porzÄ…dana temperatura w zbiorniku
 
 }
 
