@@ -131,7 +131,73 @@ solution lag(matrix(*ff)(matrix, matrix, matrix), double a, double b, double eps
 	try
 	{
 		solution Xopt;
-		//Tu wpisz kod funkcji
+		double x1 = a, x2 = b;
+		double x3 = (x1 + x2) / 2.0;
+		double x_min;
+		double fx1 = ff(matrix(x1), ud1, ud2)(0);
+		double fx2 = ff(matrix(x2), ud1, ud2)(0);
+		double fx3 = ff(matrix(x3), ud1, ud2)(0);
+
+		int i = 0;
+
+		while (true)
+		{
+			double numerator = ((x2 * x2 - x3 * x3) * fx1 + (x3 * x3 - x1 * x1) * fx2 + (x1 * x1 - x2 * x2) * fx3);
+			double denominator = ((x2 - x3) * fx1 + (x3 - x1) * fx2 + (x1 - x2) * fx3);
+
+			if (fabs(denominator) < 1e-12)
+			{
+				Xopt.flag = -1;
+				break;
+			}
+
+			x_min = 0.5 * numerator / denominator;
+
+			double f_min = ff(matrix(x_min), ud1, ud2)(0);
+
+			if (fabs(x_min - x3) < epsilon || i > Nmax)
+			{
+				Xopt.x = matrix(x_min);
+				Xopt.y = f_min;
+				Xopt.flag = 1;
+				break;
+			}
+
+			if (x_min < x3)
+			{
+				if (f_min < fx3)
+				{
+					x2 = x3; fx2 = fx3;
+					x3 = x_min; fx3 = f_min;
+				}
+				else
+				{
+					x1 = x_min; fx1 = f_min;
+				}
+			}
+			else
+			{
+				if (f_min < fx3)
+				{
+					x1 = x3; fx1 = fx3;
+					x3 = x_min; fx3 = f_min;
+				}
+				else
+				{
+					x2 = x_min; fx2 = f_min;
+				}
+			}
+
+			if (fabs(x2 - x1) < gamma)
+			{
+				Xopt.x = matrix(x_min);
+				Xopt.y = f_min;
+				Xopt.flag = 1;
+				break;
+			}
+
+			i++;
+		}
 
 		return Xopt;
 	}
