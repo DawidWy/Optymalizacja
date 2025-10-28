@@ -73,7 +73,7 @@ void lab1()
 	std::ofstream Sout("symulacja_lab1.csv");
 	//Problem teoretyczny
 	double* res = new double[2] {0,0};
-	double x0 = -45, d = 5, alpha = 1.6, epsilon = 0.0001;
+	double x0 = -45, d = 5, alpha = 1.6, epsilon = 0.0001, gamma = 0.00001;
 	int Nmax = 10000;
 	solution wynik;
 	for(int i=0;i<100;i++){
@@ -81,6 +81,8 @@ void lab1()
 		cout <<"Przedzial <"<< res[0] << " " << res[1] << ">, wywaloania " << solution::f_calls << "\n";
 		wynik = fib(ff1T, res[0], res[1], epsilon);
 		cout<<"Wynik fib : "<<wynik<<"\n";
+		wynik = lag(ff1T, res[0], res[1], epsilon, gamma, Nmax);
+		cout<< "Wynik lag: "<<wynik<<"\n";
 		x0 = x0 + 1;
 	}
 
