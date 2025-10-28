@@ -99,6 +99,7 @@ solution fib(matrix(*ff)(matrix, matrix, matrix), double a, double b, double eps
 {
     try
     {
+		solution Xopt;
 		// Generacja ciągu Fibbonacciego
         vector<int> fibs = {1, 1};
         int k = 2;
@@ -135,11 +136,12 @@ solution fib(matrix(*ff)(matrix, matrix, matrix), double a, double b, double eps
                 d0 = a0 + (double)fibs[n-i-2] / fibs[n-i-1] * (b0 - a0);
                 fd = ff(matrix(d0), ud1, ud2)(0,0);
             }
+			Xopt.f_calls++;
         }
         
-        solution Xopt;
         // Zwracamy punkt w połowie znalezionego przedziału
         Xopt.x = (a0 + b0) / 2.0;
+		Xopt.y = ff(Xopt.x,ud1,ud2);
         return Xopt;
     }
     catch (string ex_info)
