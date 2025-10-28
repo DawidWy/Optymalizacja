@@ -58,7 +58,7 @@ double* expansion(matrix(*ff)(matrix, matrix, matrix), double x0, double d, doub
 			p[1] = X1.x(0);
 			return p;
 		}
-		if(X0.y(0) > X1.y(0)) {
+		if(X1.y(0) > X0.y(0)) {
 			d = -d;
 			X1.x(0) = X0.x(0)+d;
 			X1.fit_fun(ff);
