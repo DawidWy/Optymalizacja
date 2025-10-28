@@ -143,31 +143,117 @@ solution lag(matrix(*ff)(matrix, matrix, matrix), double a, double b, double eps
 
 solution HJ(matrix(*ff)(matrix, matrix, matrix), matrix x0, double s, double alpha, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
-	try
-	{
-		solution Xopt;
-		//Tu wpisz kod funkcji
+    try
+    {
+        solution::clear_calls();
+        solution XB(x0); 
+        XB.y = XB.fit_fun(ff, ud1, ud2);
+        double f_XB = m2d(XB.y);
 
-		return Xopt;
-	}
-	catch (string ex_info)
-	{
-		throw ("solution HJ(...):\n" + ex_info);
-	}
+        solution X;
+        solution XB_old;
+        double f_X;
+
+        do
+        {
+            X = HJ_trial(ff, XB, s, ud1, ud2);
+            f_X = m2d(X.y);
+            if (solution::f_calls > Nmax)
+                throw string("Przekroczono limit wywolan funkcji celu (Nmax).");
+
+            if (f_X < f_XB)
+            {
+                do
+                {
+					 XB_old = XB; 
+                    XB = X; 
+                    f_XB = f_X;
+                    matrix x_pattern_vec = 2 * XB.x - XB_old.x;
+                    solution X_pattern_start(x_pattern_vec);
+                    X_pattern_start.y = X_pattern_start.fit_fun(ff, ud1, ud2); 
+                    if (solution::f_calls > Nmax)
+                        throw string("Przekroczono limit wywolan funkcji celu (Nmax).");
+                    X = HJ_trial(ff, X_pattern_start, s, ud1, ud2);
+                    f_X = m2d(X.y);
+                    if (solution::f_calls > Nmax)
+                        throw string("Przekroczono limit wywolan funkcji celu (Nmax).");
+
+                } while (f_X < f_XB);
+            }
+            else
+            {
+                s = alpha * s;
+            }
+            if (solution::f_calls > Nmax)
+                throw string("Przekroczono limit wywolan funkcji celu (Nmax).");
+        } while (s >= epsilon);
+        return XB;
+    }
+    catch (string ex_info)
+    {
+        throw ("solution HJ(...):\n" + ex_info);
+    }
 }
 
 solution HJ_trial(matrix(*ff)(matrix, matrix, matrix), solution XB, double s, matrix ud1, matrix ud2)
 {
-	try
-	{
-		//Tu wpisz kod funkcji
+    try
+    {
+        solution X_current = XB; 
+        double f_current = m2d(X_current.y); 
+        int* dims = get_size(XB.x);
+        int n_rows = dims[0];
+        int m_cols = dims[1];
+        int n;
+        bool is_col_vector = true;
 
-		return XB;
-	}
-	catch (string ex_info)
-	{
-		throw ("solution HJ_trial(...):\n" + ex_info);
-	}
+        if (m_cols == 1) {
+            n = n_rows;
+            is_col_vector = true;
+        } else if (n_rows == 1) {
+            n = m_cols;
+            is_col_vector = false;
+        } else {
+            n = n_rows;
+            is_col_vector = true;
+        }
+        
+        for (int j = 0; j < n; j++)
+        {
+            matrix ej(n_rows, m_cols, 0.0); 
+
+            if (is_col_vector) {
+                ej(j, 0) = 1.0;
+            } else {
+                ej(0, j) = 1.0;
+            }
+
+            solution X_test(X_current.x + s * ej);
+            double f_test = m2d(X_test.fit_fun(ff, ud1, ud2));
+
+            if (f_test < f_current)
+            {
+                X_current = X_test; 
+                f_current = f_test; 
+            }
+            else
+            {
+                X_test.x = X_current.x - s * ej; 
+                f_test = m2d(X_test.fit_fun(ff, ud1, ud2));
+
+                if (f_test < f_current)
+                {
+                    X_current = X_test;
+                    f_current = f_test;
+                }
+            }
+        }
+        return X_current;
+    }
+    catch (string ex_info)
+    {
+        throw ("solution HJ_trial(...):\n" + ex_info);
+    }
 }
 
 solution Rosen(matrix(*ff)(matrix, matrix, matrix), matrix x0, matrix s0, double alpha, double beta, double epsilon, int Nmax, matrix ud1, matrix ud2)

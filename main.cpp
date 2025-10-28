@@ -24,7 +24,7 @@ int main()
 {
 	try
 	{
-		lab0();
+		lab1();
 	}
 	catch (string EX_INFO)
 	{
@@ -88,9 +88,25 @@ void lab1()
 
 }
 
-void lab2()
-{
-
+void lab2(){
+	srand(time(NULL));
+	std::ofstream Sout("symulacja_lab2.csv");
+	matrix X;
+	double step = 0.01, alpha = 0.8, beta = 0.1, epsilon = 0.0001;
+	double a, b;
+	int Nmax = 1000;
+	for (int i = 0; i < 100; i++)
+	{
+	a = ((rand() % 200) / 100.0) - 1;
+	b = ((rand() % 200) / 100.0) - 1;
+	alpha = 0.8;
+	X = matrix(2, new double[2] {a, b});
+	solution hooke = HJ(ff3T, X, step, alpha, epsilon, Nmax);
+	Sout << "x" << a << ";" << "x" << b << ";" << "x" <<
+	hooke.x(0) << ";" << "x" << hooke.x(1) << ";" << "x" << hooke.y <<
+	";" << "x" << solution::f_calls << ";\n";
+	cout << hooke;
+	}
 }
 
 void lab3()

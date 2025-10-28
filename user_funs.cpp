@@ -48,3 +48,10 @@ matrix lab1dY(matrix x, matrix ud1, double a, double b, double Va, double Pa, do
 	y(1) = Faout - a * b * Db * sqrt((2 * g * y(0))/ Pb) + Fin;
 	y(2) = Fin/y(0) * (Tinb - y(1)) + Faout/y(0) * (Ta0 - y(1));
 }
+
+matrix ff3T(matrix x, matrix ud1, matrix ud2) {
+	double x1 = x(0);
+	double x2 = x(1);
+	double result = pow(x1, 2) + pow(x2, 2) - cos(2.5 * 3.14 * x1) - cos(2.5 * 3.14 * x2) + 2;
+	return matrix(1, 1, result);
+}
