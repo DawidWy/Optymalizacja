@@ -55,7 +55,7 @@ matrix ff1R(matrix x, matrix ud1, matrix ud2){
 	double T_max = 0;										// szukamy maksymalnej temperatury w zbiorniku B
 	for (int i = 0; i < n; i++)
 		if (S[1](i, 2) > T_max)
-			T_max = Y[1](i, 2);
+			T_max = S[1](i, 2);
 	y = abs(T_max - 50.0);									// wartość funkcji celu (minimalizujemy różnicę od 50°C)
 	S[0].~matrix();											// usuwamy z pamięci rozwiązanie RR
 	S[1].~matrix();
