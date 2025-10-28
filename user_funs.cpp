@@ -51,13 +51,13 @@ matrix ff1R(matrix x, matrix ud1, matrix ud2){
 	double dt = 1.0;
 	matrix ud2 = m2d(x);
 	matrix* S = solve_ode(lab1dY, t0, dt, tend, Y0, ud1, ud2);
-	int n = get_len(S[0]);									// długość rozwiązania
-	double T_max = 0;										// szukamy maksymalnej temperatury w zbiorniku B
-	for (int i = 0; i < n; i++)
+	int n = get_len(S[0]);									
+	double T_max = 0;
+	for (int i = 0; i < n; ++i)									
 		if (S[1](i, 2) > T_max)
 			T_max = S[1](i, 2);
-	y = abs(T_max - 50.0);									// wartość funkcji celu (minimalizujemy różnicę od 50°C)
-	S[0].~matrix();											// usuwamy z pamięci rozwiązanie RR
+	y = abs(T_max - 50.0);									
+	S[0].~matrix();
 	S[1].~matrix();
 	return y;
 }
