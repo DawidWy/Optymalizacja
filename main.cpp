@@ -10,7 +10,10 @@ Data ostatniej modyfikacji: 30.09.2025
 
 #include "matrix.h"
 #include"opt_alg.h"
+<<<<<<< HEAD
 #include "solution.h"
+=======
+>>>>>>> f1d074ac7ba0b469b594e04f95dcb10a65d9a02c
 #include <cmath>
 
 void lab0();
@@ -71,6 +74,7 @@ void lab0()
 
 void lab1()
 {
+<<<<<<< HEAD
 	std::ofstream Sout("symulacja_lab1.csv");
 	// Sout << fixed;
 	// cout << fixed;
@@ -94,6 +98,8 @@ void lab1()
 	}
 
 	//Problem rzeczywsity
+=======
+>>>>>>> f1d074ac7ba0b469b594e04f95dcb10a65d9a02c
 	double Pa = 2; 				// Pole podstawy zbiornika A
 	double Va0 = 5; 			// Objętość wody w temperaturze Ta0
 	double Ta0 = 95; 			// Temperatura wody w C w zbiorniku B
