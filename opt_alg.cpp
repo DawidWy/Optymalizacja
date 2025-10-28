@@ -1,4 +1,7 @@
 #include"opt_alg.h"
+#include <algorithm>
+#include <stdexcept>
+#include <system_error>
 #include<vector>
 #include<utility>
 
@@ -169,13 +172,27 @@ solution HJ_trial(matrix(*ff)(matrix, matrix, matrix), solution XB, double s, ma
 		throw ("solution HJ_trial(...):\n" + ex_info);
 	}
 }
-
-solution Rosen(matrix(*ff)(matrix, matrix, matrix), matrix x0, matrix s0, double alpha, double beta, double epsilon, int Nmax, matrix ud1, matrix ud2)
+//oryginalnie solution Rosen(matrix(*ff)(matrix, matrix, matrix), matrix x0, matrix s0, double alpha, double beta, double epsilon, int Nmax, matrix ud1, matrix ud2)
+solution Rosen(matrix(*ff)(matrix, matrix, matrix), vector<double> x0, vector<double> s0, double alpha, double beta, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
 	try
 	{
 		solution Xopt;
-		//Tu wpisz kod funkcji
+		// Wielkość wektorów musi być sobie równa
+		if (x0.size() != s0.size()) throw errc::invalid_argument;
+		int n = x0.size();
+		//Inicjalizacja tablicy kierunków
+		matrix d0(n,n);
+		for (int i=0; i<n; i++) {d0(i,i)=1.0;}
+		//Tablica względnego wydłużenia
+		vector<double> lambda(n,0.0);
+		//Tablica porażek
+		vector<int> p(n,0);
+		while (*max_element(s0.begin(), s0.end()) < epsilon) {
+			for (int j = 0; j<n; j++) {
+				
+			}
+		}
 
 		return Xopt;
 	}
