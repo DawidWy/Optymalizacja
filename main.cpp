@@ -10,10 +10,7 @@ Data ostatniej modyfikacji: 30.09.2025
 
 #include "matrix.h"
 #include"opt_alg.h"
-<<<<<<< HEAD
 #include "solution.h"
-=======
->>>>>>> f1d074ac7ba0b469b594e04f95dcb10a65d9a02c
 #include <cmath>
 
 void lab0();
@@ -74,13 +71,12 @@ void lab0()
 
 void lab1()
 {
-<<<<<<< HEAD
 	std::ofstream Sout("symulacja_lab1.csv");
 	// Sout << fixed;
 	// cout << fixed;
 	//Problem teoretyczny
 	double* res = new double[2] {0,0};
-	double x0 = -45, d = 5, alpha = 1.6, epsilon = 0.0001;
+	double x0 = -45, d = 5, alpha = 1.6, epsilon = 0.0001, gamma = 0.0001;
 	int Nmax = 10000;
 	solution wynik;
 	for(int i=0;i<100;i++){
@@ -88,6 +84,8 @@ void lab1()
 		x0 = x0 + 1;
 		Sout << x0 << "," << res[0] << "," << res[1] << "," << solution::f_calls;
 		wynik = fib(ff1T, res[0], res[1], epsilon);
+		Sout << wynik.x(0,0) << "," << wynik.y(0,0) << "," << wynik.f_calls << ", ,";
+		wynik = lag(ff1T, res[0], res[1], epsilon, gamma, Nmax);
 		Sout << wynik.x(0,0) << "," << wynik.y(0,0) << "," << wynik.f_calls << ", " << "\n";
 		//cout << x0 << "," << res[0] << "," << res[1] << "," << solution::f_calls << "\n";
 		//Sout << x0 << "," << res[0] << "," << res[1] << "," << solution::f_calls << "\n";
@@ -98,8 +96,6 @@ void lab1()
 	}
 
 	//Problem rzeczywsity
-=======
->>>>>>> f1d074ac7ba0b469b594e04f95dcb10a65d9a02c
 	double Pa = 2; 				// Pole podstawy zbiornika A
 	double Va0 = 5; 			// Objętość wody w temperaturze Ta0
 	double Ta0 = 95; 			// Temperatura wody w C w zbiorniku B

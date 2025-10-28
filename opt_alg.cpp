@@ -158,8 +158,11 @@ solution lag(matrix(*ff)(matrix, matrix, matrix), double a, double b, double eps
 		double x3 = (x1 + x2) / 2.0;
 		double x_min;
 		double fx1 = ff(matrix(x1), ud1, ud2)(0);
+		Xopt.f_calls++;
 		double fx2 = ff(matrix(x2), ud1, ud2)(0);
+		Xopt.f_calls++;
 		double fx3 = ff(matrix(x3), ud1, ud2)(0);
+		Xopt.f_calls++;
 
 		int i = 0;
 
@@ -177,6 +180,7 @@ solution lag(matrix(*ff)(matrix, matrix, matrix), double a, double b, double eps
 			x_min = 0.5 * numerator / denominator;
 
 			double f_min = ff(matrix(x_min), ud1, ud2)(0);
+			Xopt.f_calls++;
 
 			if (fabs(x_min - x3) < epsilon || i > Nmax)
 			{
