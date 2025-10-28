@@ -41,12 +41,55 @@ matrix ff1T(matrix x, matrix ud1, matrix ud2){
 	return y;
 }
 
-matrix lab1dY(matrix x, matrix ud1, double a, double b, double Va, double Pa, double Db, double Pb, double Fin, double Tinb, double Ta0){
-	matrix y;
-	double Faout = a * b * m2d(ud1) * sqrt((2 * g * Va) / Pa);
-	y(0) = -1 * Faout;
-	y(1) = Faout - a * b * Db * sqrt((2 * g * y(0))/ Pb) + Fin;
-	y(2) = Fin/y(0) * (Tinb - y(1)) + Faout/y(0) * (Ta0 - y(1));
+matrix ff1R(matrix x, matrix ud1, matrix ud2){
+	matrix Y0(3, 1), y;
+	Y0(0) = 5.0;
+	Y0(1) = 1.0;
+	Y0(2) = 20.0;
+	double t0 = 0.0;
+	double tend = 2000.0;
+	double dt = 1.0;
+	matrix ud2 = m2d(x);
+	matrix* S = solve_ode(lab1dY, t0, dt, tend, Y0, ud1, ud2);
+	int n = get_len(S[0]);									
+	double T_max = 0;
+	for (int i = 0; i < n; ++i)									
+		if (S[1](i, 2) > T_max)
+			T_max = S[1](i, 2);
+	y = abs(T_max - 50.0);									
+	S[0].~matrix();
+	S[1].~matrix();
+	return y;
+}
+
+matrix lab1dY(double t, matrix Y, matrix ud1, matrix ud2)
+{
+	double Fin = 0.01;
+	double Pa = 2; 				// Pole podstawy zbiornika A
+	double Va0 = 5; 			// Objętość wody w temperaturze Ta0
+	double Ta0 = 95; 			// Temperatura wody w C w zbiorniku B
+	double Pb = 1; 				// Pole podstawy zbiornika B
+	double Vb0 = 1; 			// Objętość wody w temperaturze Tb0
+	double Tb0 = 20; 			// Temperatura wody w C w zbiorniku B
+	double TinB = 20; 			// Temperatura wlewającej się wody do zbiornika B
+	double FinB = 10; 			// Prędkość wlewania się wody do zbiornika B w l/s
+	double DB = 0.00365665; 	// Pole przekroju otworu z którego wylewa się woda ze zbiornika B
+	double a = 0.98; 			// Współczynnik lepkości cieczy
+	double b = 0.63; 			// Współczynnik zawężenia strumienia cieczy
+	double t0 = 0;
+	double tend = 2000;
+	double dt = 1;
+	double Tmax = 50; 			// Maksymalna porządana temperatura w zbiorniku
+	matrix dY(Y);
+	double VA = Y(0);
+	double VB = Y(1);
+	double TB = Y(2);
+	double Faout = VA > 0 ? a * b * m2d(ud1) * sqrt((2 * g * Va0) / Pa) : 0;
+	double Fbout = VB > 0 ? a * b * m2d(ud1) * sqrt(2 * g* Vb0 / Pb) : 0;
+	dY(0) = -Faout;
+	dY(1) = Faout - Fbout + Fin;
+	dY(2) = Faout/VB * (Ta0 - TB) + Fin/VB * (TinB - TB);
+	return dY;
 }
 
 matrix ff3T(matrix x, matrix ud1, matrix ud2) {

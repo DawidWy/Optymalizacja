@@ -83,6 +83,11 @@ void lab1()
 	solution wynik2;
 	for(int i=0;i<100;i++){
 		res = expansion(ff1T, x0, d, alpha, Nmax);
+		cout <<"Przedzial <"<< res[0] << " " << res[1] << ">, wywaloania " << solution::f_calls << "\n";
+		wynik = fib(ff1T, res[0], res[1], epsilon);
+		cout<<"Wynik fib : "<<wynik<<"\n";
+		wynik = lag(ff1T, res[0], res[1], epsilon, gamma, Nmax);
+		cout<< "Wynik lag: "<<wynik<<"\n";
 		x0 = x0 + 1;
 		Sout << x0 << "," << res[0] << "," << res[1] << "," << solution::f_calls << ",";
 		wynik1 = fib(ff1T, res[0], res[1], epsilon);
