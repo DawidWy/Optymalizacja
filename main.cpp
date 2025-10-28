@@ -10,7 +10,9 @@ Data ostatniej modyfikacji: 30.09.2025
 
 #include "matrix.h"
 #include"opt_alg.h"
+#include "solution.h"
 #include <cmath>
+#include <cstdlib>
 
 void lab0();
 void lab1();
@@ -71,11 +73,14 @@ void lab0()
 void lab1()
 {
 	std::ofstream Sout("symulacja_lab1.csv");
+	// Sout << fixed;
+	// cout << fixed;
 	//Problem teoretyczny
 	double* res = new double[2] {0,0};
-	double x0 = -45, d = 5, alpha = 1.6, epsilon = 0.0001, gamma = 0.00001;
+	double x0 = -45, d = 5, alpha = 1.1, epsilon = 0.0001, gamma = 0.0001, minimum = 62.74818;
 	int Nmax = 10000;
-	solution wynik;
+	solution wynik1;
+	solution wynik2;
 	for(int i=0;i<100;i++){
 		res = expansion(ff1T, x0, d, alpha, Nmax);
 		cout <<"Przedzial <"<< res[0] << " " << res[1] << ">, wywaloania " << solution::f_calls << "\n";
@@ -84,6 +89,29 @@ void lab1()
 		wynik = lag(ff1T, res[0], res[1], epsilon, gamma, Nmax);
 		cout<< "Wynik lag: "<<wynik<<"\n";
 		x0 = x0 + 1;
+		Sout << x0 << "," << res[0] << "," << res[1] << "," << solution::f_calls << ",";
+		wynik1 = fib(ff1T, res[0], res[1], epsilon);
+		Sout << wynik1.x(0,0) << "," << wynik1.y(0,0) << "," << wynik1.f_calls;
+		if (abs(wynik1.x(0,0)-minimum)<0.001) {
+			Sout << ",globalne,";
+		}
+		else {
+			Sout << ",lokalne,";
+		}
+		wynik2 = lag(ff1T, res[0], res[1], epsilon, gamma, Nmax);
+		Sout << wynik2.x(0,0) << "," << wynik2.y(0,0) << "," << wynik2.f_calls;
+		if (abs(wynik1.x(0,0)-minimum)<0.001) {
+			Sout << ",globalne\n";
+		}
+		else {
+			Sout << ",lokalne\n";
+		}
+		//cout << x0 << "," << res[0] << "," << res[1] << "," << solution::f_calls << "\n";
+		//Sout << x0 << "," << res[0] << "," << res[1] << "," << solution::f_calls << "\n";
+		//cout <<"Przedzial <"<< res[0] << " " << res[1] << ">, wywaloania " << solution::f_calls << "\n";
+		//wynik = fib(ff1T, res[0], res[1], epsilon);
+		//cout<<"Wynik fib : "<<wynik<<"\n";
+		cout << wynik2.y(0) << endl;
 	}
 
 	//Problem rzeczywsity

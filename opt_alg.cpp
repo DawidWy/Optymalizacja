@@ -42,57 +42,54 @@ solution MC(matrix(*ff)(matrix, matrix, matrix), int N, matrix lb, matrix ub, do
 	}
 }
 
-double* expansion(matrix(*ff)(matrix, matrix, matrix), double x0, double d, double alpha, int Nmax, matrix ud1, matrix ud2)
-{
-	try
-	{
-		int i=0;
-		double* p = new double[2] { 0, 0 };
-		solution::clear_calls();
-		solution X0(x0);
-		solution X1(x0+d);
-		X0.fit_fun(ff);
-		X1.fit_fun(ff);
-		vector<solution> x_vector;
-		x_vector.push_back(X0);
-		x_vector.push_back(X1);
-		if(X0.y(0) == X1.y(0)) {
-			p[0] = X0.x(0);
-			p[1] = X1.x(0);
-			return p;
-		}
-		if(X1.y(0) > X0.y(0)) {
-			d = -d;
-			X1.x(0) = X0.x(0)+d;
-			X1.fit_fun(ff);
-			x_vector[1] = X1;
-			if(X1.y(0) >= X0.y(0)){
-				p[0] = X1.x(0);
-				p[1] = X0.x(0) - d;
-				return p;
-			}
-		}
-		do {
-			if (X0.f_calls > Nmax) break;
-			i++;
-			x_vector.push_back(x0 + (pow(alpha, i) * d));
-			x_vector[i + 1].fit_fun(ff);
-		} while(x_vector[i].y(0) >= x_vector[i + 1].y(0));
-		
-		if(d>0) {
-			p[0] = x_vector[i - 1].x(0);
-			p[1] = x_vector[i + 1].x(0);
-			}
-			else {
-			p[0] = x_vector[i + 1].x(0);
-			p[1] = x_vector[i - 1].x(0);
-			}
-		return p;
-	}
-	catch (string ex_info)
-	{
-		throw ("double* expansion(...):\n" + ex_info);
-	}
+double *expansion(matrix (*ff)(matrix, matrix, matrix), double x0, double d,
+                  double alpha, int Nmax, matrix ud1, matrix ud2) {
+  try {
+    int i = 0;
+    double *p = new double[2]{0, 0};
+    solution::clear_calls();
+    solution X0(x0);
+    solution X1(x0 + d);
+    X0.fit_fun(ff);
+    X1.fit_fun(ff);
+    vector<solution> x_vector;
+    x_vector.push_back(X0);
+    x_vector.push_back(X1);
+    if (X0.y(0) == X1.y(0)) {
+      p[0] = X0.x(0);
+      p[1] = X1.x(0);
+      return p;
+    }
+    if (X1.y(0) > X0.y(0)) {
+      d = -d;
+      X1.x(0) = X0.x(0) + d;
+      X1.fit_fun(ff);
+      x_vector[1] = X1;
+      if (X1.y(0) >= X0.y(0)) {
+        p[0] = X1.x(0);
+        p[1] = X0.x(0) - d;
+        return p;
+      }
+    }
+    do {
+      if (X0.f_calls > Nmax)
+        break;
+      i++;
+      x_vector.push_back(x0 + (pow(alpha, i) * d));
+      x_vector[i + 1].fit_fun(ff);
+    } while (x_vector[i].y(0) >= x_vector[i + 1].y(0));
+
+    if (d > 0) {
+      p[0] = x_vector[i - 1].x(0);
+      p[1] = x_vector[i + 1].x(0);
+    } else {
+      p[0] = x_vector[i + 1].x(0);
+      p[1] = x_vector[i - 1].x(0);
+    }
+    return p;
+  } catch (string ex_info) {
+    throw("double* expansion(...):\n" + ex_info);
+  }
 }
 
 solution fib(matrix(*ff)(matrix, matrix, matrix), double a, double b, double epsilon, matrix ud1, matrix ud2)
@@ -120,7 +117,9 @@ solution fib(matrix(*ff)(matrix, matrix, matrix), double a, double b, double eps
         double d0 = a0 + (double)fibs[n-1] / fibs[n] * (b0 - a0);
         
         double fc = ff(matrix(c0), ud1, ud2)(0,0);
+		Xopt.f_calls++;
         double fd = ff(matrix(d0), ud1, ud2)(0,0);
+		Xopt.f_calls++;
         
         for (int i = 0; i < n - 1; i++) {
             if (fc < fd) {
@@ -159,8 +158,11 @@ solution lag(matrix(*ff)(matrix, matrix, matrix), double a, double b, double eps
 		double x3 = (x1 + x2) / 2.0;
 		double x_min;
 		double fx1 = ff(matrix(x1), ud1, ud2)(0);
+		Xopt.f_calls++;
 		double fx2 = ff(matrix(x2), ud1, ud2)(0);
+		Xopt.f_calls++;
 		double fx3 = ff(matrix(x3), ud1, ud2)(0);
+		Xopt.f_calls++;
 
 		int i = 0;
 
@@ -178,6 +180,7 @@ solution lag(matrix(*ff)(matrix, matrix, matrix), double a, double b, double eps
 			x_min = 0.5 * numerator / denominator;
 
 			double f_min = ff(matrix(x_min), ud1, ud2)(0);
+			Xopt.f_calls++;
 
 			if (fabs(x_min - x3) < epsilon || i > Nmax)
 			{
