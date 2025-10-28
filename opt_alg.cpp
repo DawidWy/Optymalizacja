@@ -43,39 +43,47 @@ double* expansion(matrix(*ff)(matrix, matrix, matrix), double x0, double d, doub
 {
 	try
 	{
+		int i=0;
 		double* p = new double[2] { 0, 0 };
-		vector <double> x = {x0};
-		double i = 0;
-		x[1] = x0 + d;
-		if(lab1(x[1]) == lab1(x[0]))
-		{
-			p[0] = x[0];
-			p[1] = x[1];
+		solution::clear_calls();
+		solution X0(x0);
+		solution X1(x0+d);
+		X0.fit_fun(ff);
+		X1.fit_fun(ff);
+		vector<solution> x_vector;
+		x_vector.push_back(X0);
+		x_vector.push_back(X1);
+		if(X0.y(0) == X1.y(0)) {
+			p[0] = X0.x(0);
+			p[1] = X1.x(0);
 			return p;
 		}
-		if(lab1(x[1])>lab1(x[0]))
-		{
+		if(X0.y(0) > X1.y(0)) {
 			d = -d;
-			x[1] = x0+d;
-			if(lab1(x[1])>=lab1(x[0])){
-				p[0] = x[1];
-				p[1] = x[0] -d;
+			X1.x(0) = X0.x(0)+d;
+			X1.fit_fun(ff);
+			x_vector[1] = X1;
+			if(X1.y(0) >= X0.y(0)){
+				p[0] = X1.x(0);
+				p[1] = X0.x(0) - d;
 				return p;
 			}
 		}
-		while (lab1(x[i]) <= lab1(x[i+1]))
-		{
-			if(i>Nmax) throw "Przekroczono limit wywołań";
+		do {
+			if (X0.f_calls > Nmax) break;
 			i++;
-			x[i+1] = x[0] + pow(alpha, i)*d;
-		}
-		if(d>0)
-		{
-			p[0] = x[i-1];
-			p[1] = x[i+1];
-		}
-		p[0] = x[i+1];
-		p[1] = x[i-1];
+			x_vector.push_back(x0 + (pow(alpha, i) * d));
+			x_vector[i + 1].fit_fun(ff);
+		} while(x_vector[i].y(0) >= x_vector[i + 1].y(0));
+		
+		if(d>0) {
+			p[0] = x_vector[i - 1].x(0);
+			p[1] = x_vector[i + 1].x(0);
+			}
+			else {
+			p[0] = x_vector[i + 1].x(0);
+			p[1] = x_vector[i - 1].x(0);
+			}
 		return p;
 	}
 	catch (string ex_info)

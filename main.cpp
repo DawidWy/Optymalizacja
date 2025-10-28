@@ -70,6 +70,21 @@ void lab0()
 
 void lab1()
 {
+	std::ofstream Sout("symulacja_lab1.csv");
+	//Problem teoretyczny
+	double* res = new double[2] {0,0};
+	double x0 = -45, d = 5, alpha = 1.6, epsilon = 0.0001;
+	int Nmax = 10000;
+	solution wynik;
+	for(int i=0;i<100;i++){
+		res = expansion(ff1T, x0, d, alpha, Nmax);
+		cout <<"Przedzial <"<< res[0] << " " << res[1] << ">, wywaloania " << solution::f_calls << "\n";
+		wynik = fib(ff1T, res[0], res[1], epsilon);
+		cout<<"Wynik fib : "<<wynik<<"\n";
+		x0 = x0 + 1;
+	}
+
+	//Problem rzeczywsity
 	double Pa = 2; 				// Pole podstawy zbiornika A
 	double Va0 = 5; 			// Objętość wody w temperaturze Ta0
 	double Ta0 = 95; 			// Temperatura wody w C w zbiorniku B

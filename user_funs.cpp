@@ -35,7 +35,7 @@ matrix df0(double t, matrix Y, matrix ud1, matrix ud2)
 	return dY;
 }
 
-matrix lab1(matrix x){
+matrix ff1T(matrix x, matrix ud1, matrix ud2){
 	matrix y;
 	y = -cos(0.1 * x(0)) * pow(std::exp(1.0), pow(-0.1 * x(0) - 2 * M_PI, 2)) + 0.002 * pow(0.1 * x(0), 2);
 	return y;
