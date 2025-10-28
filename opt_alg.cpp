@@ -1,4 +1,7 @@
 #include"opt_alg.h"
+#include <algorithm>
+#include <stdexcept>
+#include <system_error>
 #include<vector>
 #include<utility>
 
@@ -94,44 +97,55 @@ double* expansion(matrix(*ff)(matrix, matrix, matrix), double x0, double d, doub
 
 solution fib(matrix(*ff)(matrix, matrix, matrix), double a, double b, double epsilon, matrix ud1, matrix ud2)
 {
-	try
-	{
-		vector<int> fibs;
-		int k;
-		{
-			int fe1, fe2;
-			fe1 = 1;
-			fe2 = 1;
-			double diff = (b - a)/epsilon;
-			for (k = 1;fe1 < diff;k++) {
-				fe1 += fe2;
-				fibs.push_back(fe1);
-				swap(fe1, fe2);
-			}
-		}
-		double a0 = a;
-		double b0 = b;
-		double c0 = b0 - (double)fibs[k-1] / (double)fibs[k] * (b0 - a0);
-		double d0 = a0 + b0 - c0;
-		for (int i = 0; i < k -3; i++) {
-			if (ff(c0, ud1, ud2) < ff(d0, ud1, ud2)) {
-				b0 = d0;
-			}
-			else {
-				a0 = c0;
-			}
-			c0 = b0 - (double)fibs[k-i-2] / (double)fibs[k-i-1] * (b0- a0);
-			d0 = a0 + b0 - c0;
-		}
-		solution Xopt;
-		Xopt.x=c0;
-		return Xopt;
-	}
-	catch (string ex_info)
-	{
-		throw ("solution fib(...):\n" + ex_info);
-	}
-
+    try
+    {
+		// Generacja ciągu Fibbonacciego
+        vector<int> fibs = {1, 1};
+        int k = 2;
+        double L = b - a;
+        
+        while (fibs[k-1] < L / epsilon) {
+            fibs.push_back(fibs[k-1] + fibs[k-2]);
+            k++;
+        }
+        
+        int n = k - 1; // Ilość iteracji
+        
+        double a0 = a;
+        double b0 = b;
+        
+        // Punkty początkowe
+        double c0 = b0 - (double)fibs[n-1] / fibs[n] * (b0 - a0);
+        double d0 = a0 + (double)fibs[n-1] / fibs[n] * (b0 - a0);
+        
+        double fc = ff(matrix(c0), ud1, ud2)(0,0);
+        double fd = ff(matrix(d0), ud1, ud2)(0,0);
+        
+        for (int i = 0; i < n - 1; i++) {
+            if (fc < fd) {
+                b0 = d0;
+                d0 = c0;
+                fd = fc;
+                c0 = b0 - (double)fibs[n-i-2] / fibs[n-i-1] * (b0 - a0);
+                fc = ff(matrix(c0), ud1, ud2)(0,0);
+            } else {
+                a0 = c0;
+                c0 = d0;
+                fc = fd;
+                d0 = a0 + (double)fibs[n-i-2] / fibs[n-i-1] * (b0 - a0);
+                fd = ff(matrix(d0), ud1, ud2)(0,0);
+            }
+        }
+        
+        solution Xopt;
+        // Zwracamy punkt w połowie znalezionego przedziału
+        Xopt.x = (a0 + b0) / 2.0;
+        return Xopt;
+    }
+    catch (string ex_info)
+    {
+        throw ("solution fib(...):\n" + ex_info);
+    }
 }
 
 solution lag(matrix(*ff)(matrix, matrix, matrix), double a, double b, double epsilon, double gamma, int Nmax, matrix ud1, matrix ud2)
@@ -263,13 +277,27 @@ solution HJ_trial(matrix(*ff)(matrix, matrix, matrix), solution XB, double s, ma
         throw ("solution HJ_trial(...):\n" + ex_info);
     }
 }
-
-solution Rosen(matrix(*ff)(matrix, matrix, matrix), matrix x0, matrix s0, double alpha, double beta, double epsilon, int Nmax, matrix ud1, matrix ud2)
+//oryginalnie solution Rosen(matrix(*ff)(matrix, matrix, matrix), matrix x0, matrix s0, double alpha, double beta, double epsilon, int Nmax, matrix ud1, matrix ud2)
+solution Rosen(matrix(*ff)(matrix, matrix, matrix), vector<double> x0, vector<double> s0, double alpha, double beta, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
 	try
 	{
 		solution Xopt;
-		//Tu wpisz kod funkcji
+		// Wielkość wektorów musi być sobie równa
+		if (x0.size() != s0.size()) throw errc::invalid_argument;
+		int n = x0.size();
+		//Inicjalizacja tablicy kierunków
+		matrix d0(n,n);
+		for (int i=0; i<n; i++) {d0(i,i)=1.0;}
+		//Tablica względnego wydłużenia
+		vector<double> lambda(n,0.0);
+		//Tablica porażek
+		vector<int> p(n,0);
+		while (*max_element(s0.begin(), s0.end()) < epsilon) {
+			for (int j = 0; j<n; j++) {
+				
+			}
+		}
 
 		return Xopt;
 	}
