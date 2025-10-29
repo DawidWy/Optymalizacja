@@ -55,18 +55,18 @@ matrix df1(double t, matrix Y, matrix ud1, matrix ud2)
 	double hA = VA / PA, hB = VB / PB;			// wysokości słupa wody w zbiornikach
 	double Fout_A;								// odpływ ze zbiornika A
 	double Fout_B;								// odpływ ze zbiornika B
-	if (hA > 0){ 
-		double Fout_A = a * b * DA * sqrt(2 * g * hA);
+	if (hA > 0){
+		Fout_A = a * b * DA * sqrt(2 * g * hA);
 	}
 	else {
-		double Fout_A = 0;
+		Fout_A = 0;
 	};
 
 	if (hB > 0){ 
-		double Fout_B = a * b * DB * sqrt(2 * g * hB);
+		Fout_B = a * b * DB * sqrt(2 * g * hB);
 	}
 	else {
-		double Fout_B = 0;
+		Fout_B = 0;
 	};
 
 	dY(0) = -Fout_A;							// zmiana objętości wody w zbiorniku A
