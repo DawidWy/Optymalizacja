@@ -82,8 +82,10 @@ void lab1()
 		res = expansion(ff1T, x0, d, alpha, Nmax);
 		x0 = x0 + 1;
 		Sout << x0 << "," << res[0] << "," << res[1] << "," << solution::f_calls << ",";
+		solution::clear_calls();
 		wynik1 = fib(ff1T, res[0], res[1], epsilon);
-		Sout << wynik1.x(0,0) << "," << wynik1.y(0,0) << "," << wynik1.f_calls;
+		Sout << wynik1.x(0,0) << "," << wynik1.y(0,0) << "," << solution::f_calls;
+		solution::clear_calls();
 		if (abs(wynik1.x(0,0)-minimum)<0.001) {
 			Sout << ",globalne,";
 		}
@@ -91,7 +93,8 @@ void lab1()
 			Sout << ",lokalne,";
 		}
 		wynik2 = lag(ff1T, res[0], res[1], epsilon, gamma, Nmax);
-		Sout << wynik2.x(0,0) << "," << wynik2.y(0,0) << "," << wynik2.f_calls;
+		Sout << wynik2.x(0,0) << "," << wynik2.y(0,0) << "," << solution::f_calls;
+		solution::clear_calls();
 		if (abs(wynik1.x(0,0)-minimum)<0.001) {
 			Sout << ",globalne\n";
 		}
