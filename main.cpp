@@ -109,22 +109,7 @@ void lab1()
 		cout << wynik2.y(0) << endl;
 	}
 
-	//Problem rzeczywsity
-	double Pa = 2; 				// Pole podstawy zbiornika A
-	double Va0 = 5; 			// Objętość wody w temperaturze Ta0
-	double Ta0 = 95; 			// Temperatura wody w C w zbiorniku B
-	double Pb = 1; 				// Pole podstawy zbiornika B
-	double Vb0 = 1; 			// Objętość wody w temperaturze Tb0
-	double Tb0 = 20; 			// Temperatura wody w C w zbiorniku B
-	double TinB = 20; 			// Temperatura wlewającej się wody do zbiornika B
-	double FinB = 10; 			// Prędkość wlewania się wody do zbiornika B w l/s
-	double DB = 0.00365665; 	// Pole przekroju otworu z którego wylewa się woda ze zbiornika B
-	double a = 0.98; 			// Współczynnik lepkości cieczy
-	double b = 0.63; 			// Współczynnik zawężenia strumienia cieczy
-	double t0 = 0;
-	double tend = 2000;
-	double dt = 1;
-	double Tmax = 50; 			// Maksymalna porządana temperatura w zbiorniku
+	cout << ff1R(2,matrix(),matrix());
 
 }
 
