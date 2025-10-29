@@ -81,13 +81,13 @@ matrix ff1R(matrix x, matrix ud1, matrix ud2)				// funkcja celu dla problemu rz
 }
 
 
-matrix lab1dY(matrix x, matrix ud1, double a, double b, double Va, double Pa, double Db, double Pb, double Fin, double Tinb, double Ta0){
-	matrix y;
-	double Faout = a * b * m2d(ud1) * sqrt((2 * g * Va) / Pa);
-	y(0) = -1 * Faout;
-	y(1) = Faout - a * b * Db * sqrt((2 * g * y(0))/ Pb) + Fin;
-	y(2) = Fin/y(0) * (Tinb - y(1)) + Faout/y(0) * (Ta0 - y(1));
-}
+// matrix lab1dY(matrix x, matrix ud1, double a, double b, double Va, double Pa, double Db, double Pb, double Fin, double Tinb, double Ta0){
+// 	matrix y;
+// 	double Faout = a * b * m2d(ud1) * sqrt((2 * g * Va) / Pa);
+// 	y(0) = -1 * Faout;
+// 	y(1) = Faout - a * b * Db * sqrt((2 * g * y(0))/ Pb) + Fin;
+// 	y(2) = Fin/y(0) * (Tinb - y(1)) + Faout/y(0) * (Ta0 - y(1));
+// }
 
 matrix ff3T(matrix x, matrix ud1, matrix ud2) {
 	double x1 = x(0);
