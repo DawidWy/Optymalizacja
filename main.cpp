@@ -11,6 +11,7 @@ Data ostatniej modyfikacji: 30.09.2025
 #include "matrix.h"
 #include"opt_alg.h"
 #include "solution.h"
+#include "csv.h"
 #include <cmath>
 #include <cstdlib>
 
@@ -72,36 +73,38 @@ void lab0()
 
 void lab1()
 {
-	std::ofstream Sout("symulacja_lab1.csv");
+	
+	CSVStream Sout("symulacja_lab1.csv",',',{"x0","x_L","x_H","fib_wynik.x","fib_wynik.y","fib_wynik.f_calls","fib_wynik.flag","lag_wynik.x","lag_wynik.y","lag_wynik.f_calls","lag_wynik.flag"});
 	// Sout << fixed;
 	// cout << fixed;
 	//Problem teoretyczny
 	double* res = new double[2] {0,0};
-	double x0 = -45, d = 5, alpha = 1.1, epsilon = 0.0001, gamma = 0.0001, minimum = 62.74818;
+	double  d = 1, alpha = 1.1, epsilon = 0.0001, gamma = 0.0001, minimum = 62.74818;
 	int Nmax = 10000;
 	solution wynik1;
 	solution wynik2;
-	Sout << "x0" << "," << "x1" << "," << "x2" << "," << "f_calls";
-	for(int i=0;i<100;i++){
-		res = expansion(ff1R, x0, d, alpha, Nmax);
-		x0 = x0 + 1;
-		Sout << x0 << "," << res[0] << "," << res[1] << "," << solution::f_calls << ",";
+	for(int i=1;i<=100;i++){
+		res = expansion(ff1R, i, d, alpha, Nmax);
+		Sout << i  << res[0]  << res[1] ;
+		solution::clear_calls();
 		wynik1 = fib(ff1R, res[0], res[1], epsilon);
-		Sout << wynik1.x(0,0) << "," << wynik1.y(0,0) << "," << wynik1.f_calls;
+		Sout << wynik1.x(0,0)  << wynik1.y(0,0)  << solution::f_calls;
 		if (abs(wynik1.x(0,0)-minimum)<0.001) {
-			Sout << ",globalne,";
+			Sout << "globalne";
 		}
 		else {
-			Sout << ",lokalne,";
+			Sout << "lokalne";
 		}
+		solution::clear_calls();
 		wynik2 = lag(ff1R, res[0], res[1], epsilon, gamma, Nmax);
-		Sout << wynik2.x(0,0) << "," << wynik2.y(0,0) << "," << wynik2.f_calls;
+		Sout << wynik2.x(0,0)  << wynik2.y(0,0)  << solution::f_calls;
 		if (abs(wynik1.x(0,0)-minimum)<0.001) {
-			Sout << ",globalne\n";
+			Sout << "globalne";
 		}
 		else {
-			Sout << ",lokalne\n";
+			Sout << "lokalne";
 		}
+		Sout.newline();
 		//cout << x0 << "," << res[0] << "," << res[1] << "," << solution::f_calls << "\n";
 		//Sout << x0 << "," << res[0] << "," << res[1] << "," << solution::f_calls << "\n";
 		//cout <<"Przedzial <"<< res[0] << " " << res[1] << ">, wywaloania " << solution::f_calls << "\n";
