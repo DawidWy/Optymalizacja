@@ -11,7 +11,8 @@ SRCS = main.cpp \
        ode_solver.cpp \
        opt_alg.cpp \
        solution.cpp \
-       user_funs.cpp
+       user_funs.cpp \
+	   csv.cpp
 
 # Pliki obiektowe
 OBJS = $(SRCS:.cpp=.o)
@@ -42,6 +43,10 @@ solution.o: solution.cpp solution.h
 
 user_funs.o: user_funs.cpp user_funs.h
 	$(CXX) $(CXXFLAGS) -c user_funs.cpp
+
+csv.o: csv.cpp csv.h
+	$(CXX) $(CXXFLAGS) -c csv.cpp
+
 
 # Czyszczenie plików tymczasowych
 clean:

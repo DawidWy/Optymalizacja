@@ -81,11 +81,12 @@ void lab1()
 	int Nmax = 10000;
 	solution wynik1;
 	solution wynik2;
+	Sout << "x0" << "," << "x1" << "," << "x2" << "," << "f_calls";
 	for(int i=0;i<100;i++){
-		res = expansion(ff1T, x0, d, alpha, Nmax);
+		res = expansion(ff1R, x0, d, alpha, Nmax);
 		x0 = x0 + 1;
 		Sout << x0 << "," << res[0] << "," << res[1] << "," << solution::f_calls << ",";
-		wynik1 = fib(ff1T, res[0], res[1], epsilon);
+		wynik1 = fib(ff1R, res[0], res[1], epsilon);
 		Sout << wynik1.x(0,0) << "," << wynik1.y(0,0) << "," << wynik1.f_calls;
 		if (abs(wynik1.x(0,0)-minimum)<0.001) {
 			Sout << ",globalne,";
@@ -93,7 +94,7 @@ void lab1()
 		else {
 			Sout << ",lokalne,";
 		}
-		wynik2 = lag(ff1T, res[0], res[1], epsilon, gamma, Nmax);
+		wynik2 = lag(ff1R, res[0], res[1], epsilon, gamma, Nmax);
 		Sout << wynik2.x(0,0) << "," << wynik2.y(0,0) << "," << wynik2.f_calls;
 		if (abs(wynik1.x(0,0)-minimum)<0.001) {
 			Sout << ",globalne\n";
