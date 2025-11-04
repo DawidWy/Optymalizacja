@@ -42,36 +42,54 @@ matrix ff1T(matrix x, matrix ud1, matrix ud2){
 	return y;
 }
 
-matrix df1(double t, matrix Y, matrix ud1, matrix ud2)
+matrix ff1R(matrix x, matrix ud1, matrix ud2){
+	matrix Y0(3, 1), y;
+	Y0(0) = 5.0;
+	Y0(1) = 1.0;
+	Y0(2) = 20.0;
+	double t0 = 0.0;
+	double tend = 2000.0;
+	double dt = 1.0;
+	ud2 = m2d(x);
+	matrix* S = solve_ode(lab1dY, t0, dt, tend, Y0, ud1, ud2);
+	int n = get_len(S[0]);									
+	double T_max = 0;
+	for (int i = 0; i < n; ++i)									
+		if (S[1](i, 2) > T_max)
+			T_max = S[1](i, 2);
+	y = abs(T_max - 50.0);									
+	S[0].~matrix();
+	S[1].~matrix();
+	return y;
+}
+
+matrix lab1dY(double t, matrix Y, matrix ud1, matrix ud2)
 {
-	matrix dY(3, 1);							// Wektor pochodnych
-	double g = 9.81, PA = 2.0, PB = 1.0;		// Parametry
-	double a = 0.98, b = 0.63;					// współczynniki lepkości i zwężenia strumienia
-	double TA_in = 95.0, TB_in_temp = 20.0;		// temperatury dopływu
-	double Fin_B = 10.0 / 1000.0;				// dopływ zewnętrzny do zbiornika B [m^3/s]
-	double DB = 36.5665 * 1e-4;					// pole powierzchni odpływu ze zbiornika B [m^2]
-	double DA = ud2(0);							// pole powierzchni przekroju DA [m^2]
-	double VA = Y(0), VB = Y(1), TB = Y(2);		// obecna objętość i temperatura
-	double hA = VA / PA, hB = VB / PB;			// wysokości słupa wody w zbiornikach
-	double Fout_A;								// odpływ ze zbiornika A
-	double Fout_B;								// odpływ ze zbiornika B
-	if (hA > 0){
-		Fout_A = a * b * DA * sqrt(2 * g * hA);
-	}
-	else {
-		Fout_A = 0;
-	};
-
-	if (hB > 0){ 
-		Fout_B = a * b * DB * sqrt(2 * g * hB);
-	}
-	else {
-		Fout_B = 0;
-	};
-
-	dY(0) = -Fout_A;							// zmiana objętości wody w zbiorniku A
-	dY(1) = Fout_A + Fin_B - Fout_B;			// zmiana objętości wody w zbiorniku B
-	dY(2) = (abs(VB) < 1e-9) ? 0 : (Fout_A * (TA_in - TB) + Fin_B * (TB_in_temp - TB)) / VB;	// zmiana temperatury
+	double Fin = 0.01;
+	double Pa = 2; 				// Pole podstawy zbiornika A
+	double Va0 = 5; 			// Objętość wody w temperaturze Ta0
+	double Ta0 = 95; 			// Temperatura wody w C w zbiorniku B
+	double Pb = 1; 				// Pole podstawy zbiornika B
+	double Vb0 = 1; 			// Objętość wody w temperaturze Tb0
+	double Tb0 = 20; 			// Temperatura wody w C w zbiorniku B
+	double TinB = 20; 			// Temperatura wlewającej się wody do zbiornika B
+	double FinB = 10; 			// Prędkość wlewania się wody do zbiornika B w l/s
+	double DB = 0.00365665; 	// Pole przekroju otworu z którego wylewa się woda ze zbiornika B
+	double a = 0.98; 			// Współczynnik lepkości cieczy
+	double b = 0.63; 			// Współczynnik zawężenia strumienia cieczy
+	double t0 = 0;
+	double tend = 2000;
+	double dt = 1;
+	double Tmax = 50; 			// Maksymalna porządana temperatura w zbiorniku
+	matrix dY(Y);
+	double VA = Y(0);
+	double VB = Y(1);
+	double TB = Y(2);
+	double Faout = VA > 0 ? a * b * m2d(ud1) * sqrt((2 * g * Va0) / Pa) : 0;
+	double Fbout = VB > 0 ? a * b * m2d(ud1) * sqrt(2 * g* Vb0 / Pb) : 0;
+	dY(0) = -Faout;
+	dY(1) = Faout - Fbout + Fin;
+	dY(2) = Faout/VB * (Ta0 - TB) + Fin/VB * (TinB - TB);
 	return dY;
 }
 
