@@ -49,7 +49,7 @@ matrix ff1R(matrix x, matrix ud1, matrix ud2){
 	double t0 = 0.0;
 	double tend = 2000.0;
 	double dt = 1.0;
-	matrix ud2 = m2d(x);
+	ud2 = m2d(x);
 	matrix* S = solve_ode(lab1dY, t0, dt, tend, Y0, ud1, ud2);
 	int n = get_len(S[0]);									
 	double T_max = 0;
