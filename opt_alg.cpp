@@ -348,8 +348,6 @@ solution HJ_trial(matrix(*ff)(matrix, matrix, matrix), solution XB, double s, ma
         throw ("solution HJ_trial(...):\n" + ex_info);
     }
 }
-//oryginalnie solution Rosen(matrix(*ff)(matrix, matrix, matrix), matrix x0, matrix s0, double alpha, double beta, double epsilon, int Nmax, matrix ud1, matrix ud2)
-// solution Rosen(matrix(*ff)(matrix, matrix, matrix), matrix x0, matrix s0, double alpha, double beta, double epsilon, int Nmax, matrix ud1, matrix ud2)
 
 solution Rosen(matrix(*ff)(matrix, matrix, matrix), const matrix& x0, const matrix& s0, double alpha, double beta, double epsilon, int Nmax, matrix ud1, matrix ud2) {
     solution Xopt;
