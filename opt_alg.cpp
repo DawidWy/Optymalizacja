@@ -350,6 +350,7 @@ solution HJ_trial(matrix(*ff)(matrix, matrix, matrix), solution XB, double s, ma
 }
 
 solution Rosen(matrix(*ff)(matrix, matrix, matrix), const matrix& x0, const matrix& s0, double alpha, double beta, double epsilon, int Nmax, matrix ud1, matrix ud2) {
+    
     solution Xopt;
     // Sprawdzenie poprawności danych wejściowych
     if (get_len(x0) != get_len(s0)) 
@@ -386,7 +387,7 @@ solution Rosen(matrix(*ff)(matrix, matrix, matrix), const matrix& x0, const matr
         for (int j = 0; j < n; j++) {
             // Sprawdzenie liczby wywołań funkcji
             if (fcalls > Nmax) {
-                throw string("Rosen: przekroczono maksymalną ilość wywołań funkcji");
+                throw string("rosenbrock: Przekroczono max wywołania");
             }
 
             // Obliczenie nowego punktu: xB + s[j] * d[j]
@@ -395,7 +396,7 @@ solution Rosen(matrix(*ff)(matrix, matrix, matrix), const matrix& x0, const matr
             // Ewaluacja funkcji
             double f_new = m2d(ff(x_new, ud1, ud2));
             double f_old = m2d(ff(xB, ud1, ud2));
-            fcalls += 2; // Dwa wywołania: f(x_new) i f(xB)
+            fcalls += 2;
 
             if (f_new < f_old) {
                 // Krok udany - ekspansja
@@ -422,11 +423,10 @@ solution Rosen(matrix(*ff)(matrix, matrix, matrix), const matrix& x0, const matr
         }
 
         if (change_basis) {
-            // Ortogonalizacja Grama-Schmidta
+            // Ortogonalizacja Grama-Schmidta względem poprzednich wektorów
             vector<matrix> new_d = d;
             
             for (int j = 0; j < n; j++) {
-                // Ortogonalizacja względem poprzednich wektorów
                 for (int k = 0; k < j; k++) {
                     double dot_product = 0.0;
                     double norm_sq = 0.0;
@@ -482,9 +482,19 @@ solution Rosen(matrix(*ff)(matrix, matrix, matrix), const matrix& x0, const matr
         }
 
     } while (true);
-
-	Xopt.x = x_current;
-	solution::f_calls+=fcalls;
+    
+    
+    // Obliczenie wartości funkcji celu w znalezionym punkcie
+    double f_value = m2d(ff(x_current, ud1, ud2));
+    fcalls++;
+    
+    // Ustawienie pól solution
+    Xopt.x = x_current;
+    Xopt.y = f_value;
+    Xopt.flag = 0;
+    
+    solution::f_calls = fcalls;
+    
     return Xopt;
 }
 
