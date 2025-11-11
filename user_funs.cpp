@@ -42,26 +42,26 @@ matrix ff1T(matrix x, matrix ud1, matrix ud2){
 	return y;
 }
 
-matrix ff1R(matrix x, matrix ud1, matrix ud2){
-	matrix Y0(3, 1), y;
-	Y0(0) = 5.0;
-	Y0(1) = 1.0;
-	Y0(2) = 20.0;
-	double t0 = 0.0;
-	double tend = 2000.0;
-	double dt = 1.0;
-	ud2 = m2d(x);
-	matrix* S = solve_ode(lab1dY, t0, dt, tend, Y0, ud1, ud2);
-	int n = get_len(S[0]);									
-	double T_max = 0;
-	for (int i = 0; i < n; ++i)									
-		if (S[1](i, 2) > T_max)
-			T_max = S[1](i, 2);
-	y = abs(T_max - 50.0);									
-	S[0].~matrix();
-	S[1].~matrix();
-	return y;
-}
+// matrix ff1R(matrix x, matrix ud1, matrix ud2){
+// 	matrix Y0(3, 1), y;
+// 	Y0(0) = 5.0;
+// 	Y0(1) = 1.0;
+// 	Y0(2) = 20.0;
+// 	double t0 = 0.0;
+// 	double tend = 2000.0;
+// 	double dt = 1.0;
+// 	ud2 = m2d(x);
+// 	matrix* S = solve_ode(lab1dY, t0, dt, tend, Y0, ud1, ud2);
+// 	int n = get_len(S[0]);									
+// 	double T_max = 0;
+// 	for (int i = 0; i < n; ++i)									
+// 		if (S[1](i, 2) > T_max)
+// 			T_max = S[1](i, 2);
+// 	y = abs(T_max - 50.0);									
+// 	S[0].~matrix();
+// 	S[1].~matrix();
+// 	return y;
+// }
 
 matrix lab1dY(double t, matrix Y, matrix ud1, matrix ud2)
 {
@@ -93,29 +93,29 @@ matrix lab1dY(double t, matrix Y, matrix ud1, matrix ud2)
 	return dY;
 }
 
-matrix ff1R(matrix x, matrix ud1, matrix ud2)
-{
-	matrix y;
-	matrix Y0 = matrix(3, 1);								//Warunki początkowe
-	matrix MT = matrix(1, new double[1]{ m2d(x)*1e-4}); // Pole przekroju DA w m^2
-	Y0(0) = 5.0;											// VA = 5 m^3
-	Y0(1) = 1.0;											// VB = 1 m^3  
-	Y0(2) = 20.0;											// TB = 20 C
-	matrix* Y = solve_ode(df1, 0, 1, 2000, Y0, ud1, MT);	// rozwiązanie równania różniczkowego
-	int n = get_len(Y[0]);									// długość rozwiązania
-	double T_max = 0;
+// matrix ff1R(matrix x, matrix ud1, matrix ud2)
+// {
+// 	matrix y;
+// 	matrix Y0 = matrix(3, 1);								//Warunki początkowe
+// 	matrix MT = matrix(1, new double[1]{ m2d(x)*1e-4}); // Pole przekroju DA w m^2
+// 	Y0(0) = 5.0;											// VA = 5 m^3
+// 	Y0(1) = 1.0;											// VB = 1 m^3  
+// 	Y0(2) = 20.0;											// TB = 20 C
+// 	matrix* Y = solve_ode(df1, 0, 1, 2000, Y0, ud1, MT);	// rozwiązanie równania różniczkowego
+// 	int n = get_len(Y[0]);									// długość rozwiązania
+// 	double T_max = 0;
 										
-	for (int i = 0; i < n; ++i) {							// szukamy maksymalnej temperatury w zbiorniku B
-		if (Y[1](i, 2) > T_max) {
-			T_max = Y[1](i, 2);
-		}
-	}
+// 	for (int i = 0; i < n; ++i) {							// szukamy maksymalnej temperatury w zbiorniku B
+// 		if (Y[1](i, 2) > T_max) {
+// 			T_max = Y[1](i, 2);
+// 		}
+// 	}
 
-	y = abs(T_max - 50.0);									// wartość funkcji celu (minimalizujemy różnicę od 50°C)
-	Y[0].~matrix();											// usuwamy z pamięci rozwiązanie RR
-	Y[1].~matrix();
-	return y;
-}
+// 	y = abs(T_max - 50.0);									// wartość funkcji celu (minimalizujemy różnicę od 50°C)
+// 	Y[0].~matrix();											// usuwamy z pamięci rozwiązanie RR
+// 	Y[1].~matrix();
+// 	return y;
+// }
 
 
 // matrix lab1dY(matrix x, matrix ud1, double a, double b, double Va, double Pa, double Db, double Pb, double Fin, double Tinb, double Ta0){
