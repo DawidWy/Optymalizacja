@@ -109,22 +109,53 @@ void lab1()
 
 void lab2(){
 	srand(time(NULL));
-	std::ofstream Sout("symulacja_lab2.csv");
-	matrix X;
-	double step = 0.01, alpha = 0.8, beta = 0.1, epsilon = 0.0001;
-	double a, b;
+	std::ofstream Hout("symulacja_lab2_Hook.csv");
+	std::ofstream Rout("symulacja_lab2_Rosen.csv");
 	int Nmax = 1000;
+
+	//===Hooke===
+	matrix X;
+	double stepH = 0.01, alphaH = 0.8, epsilonH = 0.0001;
+	double a, b;
+	
+	//===Rosenbrock===
+	// Punkt startowy
+    matrix x0R(2, 1);
+    
+        
+    // Wektor długości kroków
+    matrix s0R(2, 1);
+    s0R(0, 0) = 0.1;
+    s0R(1, 0) = 0.1;
+        
+    // Parametry algorytmu
+    double alphaR = 2.0;
+    double betaR = 0.5;
+    double epsilonR = 1e-6;
+
 	for (int i = 0; i < 100; i++)
 	{
+	// Losowanie punktu startowego
 	a = ((rand() % 200) / 100.0) - 1;
 	b = ((rand() % 200) / 100.0) - 1;
-	alpha = 0.8;
+	
+	// Ustawienie punktu startowego Rosenbrocka
+	x0R(0, 0) = a;
+    x0R(1, 0) = b;
+
+	// Ustawienie punktu startowego Hooke'a - Jeeves'a
 	X = matrix(2, new double[2] {a, b});
-	solution hooke = HJ(ff3T, X, step, alpha, epsilon, Nmax);
-	Sout << "x" << a << ";" << "x" << b << ";" << "x" <<
-	hooke.x(0) << ";" << "x" << hooke.x(1) << ";" << "x" << hooke.y <<
-	";" << "x" << solution::f_calls << ";\n";
+
+	//Obliczenia i zapis
+	solution hooke = HJ(ff3T, X, stepH, alphaH, epsilonH, Nmax);
+	Hout << a << ";" << b << ";" << hooke.x(0) << ";" << hooke.x(1) << ";" << m2d(hooke.y) << ";" << solution::f_calls << "\n";
 	cout << hooke;
+	solution::clear_calls();
+
+	solution rosen = Rosen(ff3T, x0R, s0R, alphaR, betaR, epsilonR, Nmax);
+	Rout << a << ";" << b << ";" << rosen.x(0) << ";" << rosen.x(1) << ";" << m2d(rosen.y) << ";" << solution::f_calls << "\n";
+	cout << rosen;
+	solution::clear_calls();
 	}
 }
 
