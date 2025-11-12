@@ -348,34 +348,154 @@ solution HJ_trial(matrix(*ff)(matrix, matrix, matrix), solution XB, double s, ma
         throw ("solution HJ_trial(...):\n" + ex_info);
     }
 }
-//oryginalnie solution Rosen(matrix(*ff)(matrix, matrix, matrix), matrix x0, matrix s0, double alpha, double beta, double epsilon, int Nmax, matrix ud1, matrix ud2)
-solution Rosen(matrix(*ff)(matrix, matrix, matrix), vector<double> x0, vector<double> s0, double alpha, double beta, double epsilon, int Nmax, matrix ud1, matrix ud2)
-{
-	try
-	{
-		solution Xopt;
-		// Wielkość wektorów musi być sobie równa
-		if (x0.size() != s0.size()) throw errc::invalid_argument;
-		int n = x0.size();
-		//Inicjalizacja tablicy kierunków
-		matrix d0(n,n);
-		for (int i=0; i<n; i++) {d0(i,i)=1.0;}
-		//Tablica względnego wydłużenia
-		vector<double> lambda(n,0.0);
-		//Tablica porażek
-		vector<int> p(n,0);
-		while (*max_element(s0.begin(), s0.end()) < epsilon) {
-			for (int j = 0; j<n; j++) {
-				
-			}
-		}
 
-		return Xopt;
-	}
-	catch (string ex_info)
-	{
-		throw ("solution Rosen(...):\n" + ex_info);
-	}
+solution Rosen(matrix(*ff)(matrix, matrix, matrix), const matrix& x0, const matrix& s0, double alpha, double beta, double epsilon, int Nmax, matrix ud1, matrix ud2) {
+    
+    solution Xopt;
+    // Sprawdzenie poprawności danych wejściowych
+    if (get_len(x0) != get_len(s0)) 
+        throw string("Rosen: x0 i s0 muszą być tych samych wymiarów");
+    if (alpha <= 1) 
+        throw string("Rosen: alpha musi być > 1");
+    if (beta <= 0 || beta >= 1) 
+        throw string("Rosen: beta musi być pomiędzy 0 i 1");
+    if (epsilon <= 0) 
+        throw string("Rosen: epsilon musi być > 0");
+    if (Nmax <= 0) 
+        throw string("Rosen: Nmax musi być > 0");
+
+    int n = get_len(x0);
+    int fcalls = 0;
+    
+    // Inicjalizacja kierunków - wektory jednostkowe
+    vector<matrix> d(n);
+    for (int i = 0; i < n; i++) {
+        d[i] = matrix(n, 1, 0.0);
+        d[i](i, 0) = 1.0;
+    }
+
+    matrix lambda(n, 1, 0.0);
+    matrix p(n, 1, 0.0);
+    matrix s = s0;
+    matrix xB = x0;
+    matrix x_current = x0;
+
+    int iteration = 0;
+    
+    do {
+        // Główna pętla po kierunkach
+        for (int j = 0; j < n; j++) {
+            // Sprawdzenie liczby wywołań funkcji
+            if (fcalls > Nmax) {
+                throw string("rosenbrock: Przekroczono max wywołania");
+            }
+
+            // Obliczenie nowego punktu: xB + s[j] * d[j]
+            matrix x_new = xB + s(j, 0) * d[j];
+
+            // Ewaluacja funkcji
+            double f_new = m2d(ff(x_new, ud1, ud2));
+            double f_old = m2d(ff(xB, ud1, ud2));
+            fcalls += 2;
+
+            if (f_new < f_old) {
+                // Krok udany - ekspansja
+                xB = x_new;
+                lambda(j, 0) += s(j, 0);
+                s(j, 0) *= alpha;
+            } else {
+                // Krok nieudany - kontrakcja
+                s(j, 0) = -beta * s(j, 0);
+                p(j, 0) += 1;
+            }
+        }
+
+        x_current = xB;
+        iteration++;
+
+        // Sprawdzenie warunku zmiany bazy
+        bool change_basis = true;
+        for (int j = 0; j < n; j++) {
+            if (lambda(j, 0) == 0.0 || p(j, 0) == 0) {
+                change_basis = false;
+                break;
+            }
+        }
+
+        if (change_basis) {
+            // Ortogonalizacja Grama-Schmidta względem poprzednich wektorów
+            vector<matrix> new_d = d;
+            
+            for (int j = 0; j < n; j++) {
+                for (int k = 0; k < j; k++) {
+                    double dot_product = 0.0;
+                    double norm_sq = 0.0;
+                    
+                    for (int i = 0; i < n; i++) {
+                        dot_product += new_d[j](i, 0) * new_d[k](i, 0);
+                        norm_sq += new_d[k](i, 0) * new_d[k](i, 0);
+                    }
+                    
+                    if (norm_sq > 1e-15) {
+                        double scale = dot_product / norm_sq;
+                        for (int i = 0; i < n; i++) {
+                            new_d[j](i, 0) -= scale * new_d[k](i, 0);
+                        }
+                    }
+                }
+                
+                // Normalizacja
+                double norm_val = 0.0;
+                for (int i = 0; i < n; i++) {
+                    norm_val += new_d[j](i, 0) * new_d[j](i, 0);
+                }
+                norm_val = sqrt(norm_val);
+                
+                if (norm_val > 1e-15) {
+                    for (int i = 0; i < n; i++) {
+                        new_d[j](i, 0) /= norm_val;
+                    }
+                }
+            }
+            
+            d = new_d;
+            
+            // Resetowanie parametrów
+            for (int j = 0; j < n; j++) {
+                lambda(j, 0) = 0.0;
+                p(j, 0) = 0;
+                s(j, 0) = s0(j, 0);
+            }
+        }
+
+        // Sprawdzenie warunku stopu - maksymalny krok
+        double max_step = 0.0;
+        for (int j = 0; j < n; j++) {
+            double step = fabs(s(j, 0));
+            if (step > max_step) {
+                max_step = step;
+            }
+        }
+        
+        if (max_step < epsilon) {
+            break;
+        }
+
+    } while (true);
+    
+    
+    // Obliczenie wartości funkcji celu w znalezionym punkcie
+    double f_value = m2d(ff(x_current, ud1, ud2));
+    fcalls++;
+    
+    // Ustawienie pól solution
+    Xopt.x = x_current;
+    Xopt.y = f_value;
+    Xopt.flag = 0;
+    
+    solution::f_calls = fcalls;
+    
+    return Xopt;
 }
 
 solution pen(matrix(*ff)(matrix, matrix, matrix), matrix x0, double c, double dc, double epsilon, int Nmax, matrix ud1, matrix ud2)

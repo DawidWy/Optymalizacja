@@ -1,4 +1,4 @@
-//Ten plik nie powinien byæ edytowany
+//Ten plik nie powinien byï¿½ edytowany
 
 #pragma once
 
@@ -14,11 +14,11 @@ using namespace std;
 
 class matrix
 {
-	int n, m;
 	double** M;
+public:
+	int n, m;
 	friend int* get_size(const matrix&);
 	friend int get_len(const matrix&); // throw (string);
-public:
 	matrix(double = 0.0);
 	matrix(int, int, double = 0.0); // throw (string);
 	matrix(int, double*); // throw (string);
