@@ -42,11 +42,11 @@ solution MC(std::function<matrix(matrix,matrix,matrix)> ff, int N, matrix lb, ma
 	}
 }
 
-double *expansion(std::function<matrix(matrix,matrix,matrix)> ff, double x0, double d,
+std::pair<double,double> expansion(std::function<matrix(matrix,matrix,matrix)> ff, double x0, double d,
                   double alpha, int Nmax, matrix ud1, matrix ud2) {
   try {
     int i = 0;
-    double *p = new double[2]{0, 0};
+    std::pair<double,double> p = {0,0};
     solution::clear_calls();
     solution X0(x0);
     solution X1(x0 + d);
@@ -56,8 +56,8 @@ double *expansion(std::function<matrix(matrix,matrix,matrix)> ff, double x0, dou
     x_vector.push_back(X0);
     x_vector.push_back(X1);
     if (X0.y(0) == X1.y(0)) {
-      p[0] = X0.x(0);
-      p[1] = X1.x(0);
+      p.first = X0.x(0);
+      p.second = X1.x(0);
       return p;
     }
     if (X1.y(0) > X0.y(0)) {
@@ -66,8 +66,8 @@ double *expansion(std::function<matrix(matrix,matrix,matrix)> ff, double x0, dou
       X1.fit_fun(ff);
       x_vector[1] = X1;
       if (X1.y(0) >= X0.y(0)) {
-        p[0] = X1.x(0);
-        p[1] = X0.x(0) - d;
+        p.first = X1.x(0);
+        p.second = X0.x(0) - d;
         return p;
       }
     }
@@ -80,11 +80,11 @@ double *expansion(std::function<matrix(matrix,matrix,matrix)> ff, double x0, dou
     } while (x_vector[i].y(0) >= x_vector[i + 1].y(0));
 
     if (d > 0) {
-      p[0] = x_vector[i - 1].x(0);
-      p[1] = x_vector[i + 1].x(0);
+      p.first = x_vector[i - 1].x(0);
+      p.second = x_vector[i + 1].x(0);
     } else {
-      p[0] = x_vector[i + 1].x(0);
-      p[1] = x_vector[i - 1].x(0);
+      p.first = x_vector[i + 1].x(0);
+      p.second = x_vector[i - 1].x(0);
     }
     return p;
   } catch (string ex_info) {

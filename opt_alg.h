@@ -7,7 +7,7 @@
 
 solution MC(std::function<matrix(matrix,matrix,matrix)> ff, int N, matrix lb, matrix ub, double epsilon, int Nmax, matrix ud1 = NAN, matrix ud2 = NAN);
 
-double* expansion(std::function<matrix(matrix,matrix,matrix)> ff, double x0, double d, double alpha, int Nmax, matrix ud1 = NAN, matrix ud2 = NAN); // throw (string);
+std::pair<double,double> expansion(std::function<matrix(matrix,matrix,matrix)> ff, double x0, double d, double alpha, int Nmax, matrix ud1 = NAN, matrix ud2 = NAN); // throw (string);
 solution fib(std::function<matrix(matrix,matrix,matrix)> ff, double a, double b, double epsilon, matrix ud1 = NAN, matrix ud2 = NAN); // throw (string);
 solution lag(std::function<matrix(matrix,matrix,matrix)> ff, double a, double b, double epsilon, double gamma, int Nmax, matrix ud1 = NAN, matrix ud2 = NAN); // throw (string);
 
