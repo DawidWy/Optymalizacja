@@ -111,7 +111,7 @@ void lab2(){
 	srand(time(NULL));
 	std::ofstream Hout("symulacja_lab2_Hook.csv");
 	std::ofstream Rout("symulacja_lab2_Rosen.csv");
-	int Nmax = 1000;
+	int Nmax = 2000;
 
 	//===Hooke===
 	matrix X;
@@ -121,7 +121,6 @@ void lab2(){
 	//===Rosenbrock===
 	// Punkt startowy
     matrix x0R(2, 1);
-    
         
     // Wektor długości kroków
     matrix s0R(2, 1);
@@ -133,27 +132,94 @@ void lab2(){
     double betaR = 0.5;
     double epsilonR = 1e-6;
 
+	// Losowanie tablicy punktów startowych
+	vector<pair<double,double>> pts(100);
 	for (int i = 0; i < 100; i++)
 	{
-	// Losowanie punktu startowego
-	a = ((rand() % 200) / 100.0) - 1;
-	b = ((rand() % 200) / 100.0) - 1;
+		pts[i] = make_pair(((rand() % 200) / 100.0) - 1, ((rand() % 200) / 100.0) - 1);
+	}
+	
+	stepH = 0.9;
+	// to pod kątem
+	s0R(0, 0) = 0.67;
+    s0R(1, 0) = 0.67;
+
+	for (int i = 0; i < 100; i++)
+	{
 	
 	// Ustawienie punktu startowego Rosenbrocka
-	x0R(0, 0) = a;
-    x0R(1, 0) = b;
+	x0R(0, 0) = pts[i].first;
+    x0R(1, 0) = pts[i].second;
 
 	// Ustawienie punktu startowego Hooke'a - Jeeves'a
-	X = matrix(2, new double[2] {a, b});
+	X = matrix(2, new double[2] {pts[i].first, pts[i].second});
 
 	//Obliczenia i zapis
 	solution hooke = HJ(ff3T, X, stepH, alphaH, epsilonH, Nmax);
-	Hout << a << ";" << b << ";" << hooke.x(0) << ";" << hooke.x(1) << ";" << m2d(hooke.y) << ";" << solution::f_calls << "\n";
+	Hout << pts[i].first << ";" << pts[i].second << ";" << hooke.x(0) << ";" << hooke.x(1) << ";" << m2d(hooke.y) << ";" << solution::f_calls << ";";
+	Hout << (abs(m2d(hooke.y)) < 0.00001 ? "TAK" : "NIE") << '\n';
 	cout << hooke;
 	solution::clear_calls();
 
 	solution rosen = Rosen(ff3T, x0R, s0R, alphaR, betaR, epsilonR, Nmax);
-	Rout << a << ";" << b << ";" << rosen.x(0) << ";" << rosen.x(1) << ";" << m2d(rosen.y) << ";" << solution::f_calls << "\n";
+	Rout << pts[i].first << ";" << pts[i].second << ";" << rosen.x(0) << ";" << rosen.x(1) << ";" << m2d(rosen.y) << ";" << solution::f_calls << ";";
+	Rout << (abs(m2d(rosen.y)) < 0.00001 ? "TAK" : "NIE") << '\n';
+	cout << rosen;
+	solution::clear_calls();
+	}
+
+	stepH = 0.4;
+	s0R(0, 0) = 0.447;
+    s0R(1, 0) = 0.447;
+
+	for (int i = 0; i < 100; i++)
+	{
+	
+	// Ustawienie punktu startowego Rosenbrocka
+	x0R(0, 0) = pts[i].first;
+    x0R(1, 0) = pts[i].second;
+
+	// Ustawienie punktu startowego Hooke'a - Jeeves'a
+	X = matrix(2, new double[2] {pts[i].first, pts[i].second});
+
+	//Obliczenia i zapis
+	solution hooke = HJ(ff3T, X, stepH, alphaH, epsilonH, Nmax);
+	Hout << pts[i].first << ";" << pts[i].second << ";" << hooke.x(0) << ";" << hooke.x(1) << ";" << m2d(hooke.y) << ";" << solution::f_calls << ";";
+	Hout << (abs(m2d(hooke.y)) < 0.00001 ? "TAK" : "NIE") << '\n';
+	cout << hooke;
+	solution::clear_calls();
+
+	solution rosen = Rosen(ff3T, x0R, s0R, alphaR, betaR, epsilonR, Nmax);
+	Rout << pts[i].first << ";" << pts[i].second << ";" << rosen.x(0) << ";" << rosen.x(1) << ";" << m2d(rosen.y) << ";" << solution::f_calls << ";";
+	Rout << (abs(m2d(rosen.y)) < 0.00001 ? "TAK" : "NIE") << '\n';
+	cout << rosen;
+	solution::clear_calls();
+	}
+
+	stepH = 0.2;
+	s0R(0, 0) = 0.316;
+    s0R(1, 0) = 0.316;
+
+	for (int i = 0; i < 100; i++)
+	{
+	
+	// Ustawienie punktu startowego Rosenbrocka
+	x0R(0, 0) = pts[i].first;
+    x0R(1, 0) = pts[i].second;
+
+	// Ustawienie punktu startowego Hooke'a - Jeeves'a
+	X = matrix(2, new double[2] {pts[i].first, pts[i].second});
+
+	//Obliczenia i zapis
+	solution hooke = HJ(ff3T, X, stepH, alphaH, epsilonH, Nmax);
+	Hout << pts[i].first << ";" << pts[i].second << ";" << hooke.x(0) << ";" << hooke.x(1) << ";" << m2d(hooke.y) << ";" << solution::f_calls << ";";
+	Hout << (abs(m2d(hooke.y)) < 0.00001 ? "TAK" : "NIE") << '\n';
+	cout << hooke;
+	solution::clear_calls();
+
+	solution rosen = Rosen(ff3T, x0R, s0R, alphaR, betaR, epsilonR, Nmax);
+	Rout << pts[i].first << ";" << pts[i].second << ";" << rosen.x(0) << ";" << rosen.x(1) << ";" << m2d(rosen.y) << ";" << solution::f_calls << ";";
+	Rout << (abs(m2d(rosen.y)) < 0.00001 ? "TAK" : "NIE") << '\n';
 	cout << rosen;
 	solution::clear_calls();
 	}
