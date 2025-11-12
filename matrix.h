@@ -8,6 +8,7 @@
 #include<fstream>
 #include<random>
 #include<chrono>
+#include<utility>
 using namespace std;
 
 #define SEP_SYMBOL ','
@@ -17,7 +18,7 @@ class matrix
 	double** M;
 public:
 	int n, m;
-	friend int* get_size(const matrix&);
+	friend std::pair<int,int> get_size(const matrix&);
 	friend int get_len(const matrix&); // throw (string);
 	matrix(double = 0.0);
 	matrix(int, int, double = 0.0); // throw (string);

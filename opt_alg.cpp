@@ -5,7 +5,7 @@
 #include<vector>
 #include<utility>
 
-solution MC(matrix(*ff)(matrix, matrix, matrix), int N, matrix lb, matrix ub, double epsilon, int Nmax, matrix ud1, matrix ud2)
+solution MC(std::function<matrix(matrix,matrix,matrix)> ff, int N, matrix lb, matrix ub, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
 	// Zmienne wej�ciowe:
 	// ff - wska�nik do funkcji celu
@@ -42,7 +42,7 @@ solution MC(matrix(*ff)(matrix, matrix, matrix), int N, matrix lb, matrix ub, do
 	}
 }
 
-double *expansion(matrix (*ff)(matrix, matrix, matrix), double x0, double d,
+double *expansion(std::function<matrix(matrix,matrix,matrix)> ff, double x0, double d,
                   double alpha, int Nmax, matrix ud1, matrix ud2) {
   try {
     int i = 0;
@@ -92,7 +92,7 @@ double *expansion(matrix (*ff)(matrix, matrix, matrix), double x0, double d,
   }
 }
 
-solution fib(matrix(*ff)(matrix, matrix, matrix), double a, double b, double epsilon, matrix ud1, matrix ud2)
+solution fib(std::function<matrix(matrix,matrix,matrix)> ff, double a, double b, double epsilon, matrix ud1, matrix ud2)
 {
     try
     {
@@ -149,7 +149,7 @@ solution fib(matrix(*ff)(matrix, matrix, matrix), double a, double b, double eps
     }
 }
 
-solution lag(matrix(*ff)(matrix, matrix, matrix), double a, double b, double epsilon, double gamma, int Nmax, matrix ud1, matrix ud2)
+solution lag(std::function<matrix(matrix,matrix,matrix)> ff, double a, double b, double epsilon, double gamma, int Nmax, matrix ud1, matrix ud2)
 {
 	try
 	{
@@ -234,7 +234,7 @@ solution lag(matrix(*ff)(matrix, matrix, matrix), double a, double b, double eps
 	}
 }
 
-solution HJ(matrix(*ff)(matrix, matrix, matrix), matrix x0, double s, double alpha, double epsilon, int Nmax, matrix ud1, matrix ud2)
+solution HJ(std::function<matrix(matrix,matrix,matrix)> ff, matrix x0, double s, double alpha, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
     try
     {
@@ -288,15 +288,15 @@ solution HJ(matrix(*ff)(matrix, matrix, matrix), matrix x0, double s, double alp
     }
 }
 
-solution HJ_trial(matrix(*ff)(matrix, matrix, matrix), solution XB, double s, matrix ud1, matrix ud2)
+solution HJ_trial(std::function<matrix(matrix,matrix,matrix)> ff, solution XB, double s, matrix ud1, matrix ud2)
 {
     try
     {
         solution X_current = XB; 
         double f_current = m2d(X_current.y); 
-        int* dims = get_size(XB.x);
-        int n_rows = dims[0];
-        int m_cols = dims[1];
+        auto dims = get_size(XB.x);
+        int n_rows = dims.first;
+        int m_cols = dims.second;
         int n;
         bool is_col_vector = true;
 
@@ -349,7 +349,7 @@ solution HJ_trial(matrix(*ff)(matrix, matrix, matrix), solution XB, double s, ma
     }
 }
 
-solution Rosen(matrix(*ff)(matrix, matrix, matrix), const matrix& x0, const matrix& s0, double alpha, double beta, double epsilon, int Nmax, matrix ud1, matrix ud2) {
+solution Rosen(std::function<matrix(matrix,matrix,matrix)> ff, const matrix& x0, const matrix& s0, double alpha, double beta, double epsilon, int Nmax, matrix ud1, matrix ud2) {
     
     solution Xopt;
     // Sprawdzenie poprawności danych wejściowych
@@ -498,7 +498,7 @@ solution Rosen(matrix(*ff)(matrix, matrix, matrix), const matrix& x0, const matr
     return Xopt;
 }
 
-solution pen(matrix(*ff)(matrix, matrix, matrix), matrix x0, double c, double dc, double epsilon, int Nmax, matrix ud1, matrix ud2)
+solution pen(std::function<matrix(matrix,matrix,matrix)> ff, matrix x0, double c, double dc, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
 	try {
 		solution Xopt;
@@ -512,7 +512,7 @@ solution pen(matrix(*ff)(matrix, matrix, matrix), matrix x0, double c, double dc
 	}
 }
 
-solution sym_NM(matrix(*ff)(matrix, matrix, matrix), matrix x0, double s, double alpha, double beta, double gamma, double delta, double epsilon, int Nmax, matrix ud1, matrix ud2)
+solution sym_NM(std::function<matrix(matrix,matrix,matrix)> ff, matrix x0, double s, double alpha, double beta, double gamma, double delta, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
 	try
 	{
@@ -527,7 +527,7 @@ solution sym_NM(matrix(*ff)(matrix, matrix, matrix), matrix x0, double s, double
 	}
 }
 
-solution SD(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
+solution SD(std::function<matrix(matrix,matrix,matrix)> ff, matrix(*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
 	try
 	{
@@ -542,7 +542,7 @@ solution SD(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, mat
 	}
 }
 
-solution CG(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
+solution CG(std::function<matrix(matrix,matrix,matrix)> ff, matrix(*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
 	try
 	{
@@ -557,7 +557,7 @@ solution CG(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, mat
 	}
 }
 
-solution Newton(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, matrix),
+solution Newton(std::function<matrix(matrix,matrix,matrix)> ff, matrix(*gf)(matrix, matrix, matrix),
 	matrix(*Hf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
 	try
@@ -573,7 +573,7 @@ solution Newton(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix,
 	}
 }
 
-solution golden(matrix(*ff)(matrix, matrix, matrix), double a, double b, double epsilon, int Nmax, matrix ud1, matrix ud2)
+solution golden(std::function<matrix(matrix,matrix,matrix)> ff, double a, double b, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
 	try
 	{
@@ -588,7 +588,7 @@ solution golden(matrix(*ff)(matrix, matrix, matrix), double a, double b, double 
 	}
 }
 
-solution Powell(matrix(*ff)(matrix, matrix, matrix), matrix x0, double epsilon, int Nmax, matrix ud1, matrix ud2)
+solution Powell(std::function<matrix(matrix,matrix,matrix)> ff, matrix x0, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
 	try
 	{
@@ -603,7 +603,7 @@ solution Powell(matrix(*ff)(matrix, matrix, matrix), matrix x0, double epsilon, 
 	}
 }
 
-solution EA(matrix(*ff)(matrix, matrix, matrix), int N, matrix lb, matrix ub, int mi, int lambda, matrix sigma0, double epsilon, int Nmax, matrix ud1, matrix ud2)
+solution EA(std::function<matrix(matrix,matrix,matrix)> ff, int N, matrix lb, matrix ub, int mi, int lambda, matrix sigma0, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
 	try
 	{

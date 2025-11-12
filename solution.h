@@ -1,8 +1,11 @@
-//Ten plik nie powinien byæ edytowany
+//Ten plik nie powinien byï¿½ edytowany
 
 #pragma once
 
+#include <functional>
 #include"ode_solver.h"
+
+
 
 class solution
 {
@@ -22,9 +25,9 @@ public:
 	solution(int, double*); // throw (string);
 	solution(const solution&);
 	solution& operator=(const solution&);
-	matrix fit_fun(matrix(*)(matrix, matrix, matrix), matrix = NAN, matrix = NAN); // throw (string);
-	matrix grad(matrix(*)(matrix, matrix, matrix), matrix = NAN, matrix = NAN); // throw (string);
-	matrix hess(matrix(*)(matrix, matrix, matrix), matrix = NAN, matrix = NAN); // throw (string);
+	matrix fit_fun(std::function<matrix(matrix, matrix, matrix)>, matrix = NAN, matrix = NAN); // throw (string);
+	matrix grad(std::function<matrix(matrix, matrix, matrix)>, matrix = NAN, matrix = NAN); // throw (string);
+	matrix hess(std::function<matrix(matrix, matrix, matrix)>, matrix = NAN, matrix = NAN); // throw (string);
 };
 
 int get_dim(const solution&); // throw (string);

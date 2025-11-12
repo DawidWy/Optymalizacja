@@ -1,4 +1,4 @@
-//Ten plik nie powinien byæ edytowany
+//Ten plik nie powinien byï¿½ edytowany
 
 #include"matrix.h"
 
@@ -202,29 +202,29 @@ void matrix::add_row(const matrix& c)
 
 matrix operator+(const matrix& A, const matrix& B)
 {
-	int* nA = get_size(A);
-	int* nB = get_size(B);
-	if (nA[0] == 1 && nA[1] == 1)
+	auto nA = get_size(A);
+	auto nB = get_size(B);
+	if (nA.first == 1 && nA.second == 1)
 	{
 		matrix C(B);
-		for (int i = 0; i < nB[0]; ++i)
-			for (int j = 0; j < nB[1]; ++j)
+		for (int i = 0; i < nB.first; ++i)
+			for (int j = 0; j < nB.second; ++j)
 				C(i, j) += A();
 		return C;
 	}
-	else if (nB[0] == 1 && nB[1] == 1)
+	else if (nB.first == 1 && nB.second == 1)
 	{
 		matrix C(A);
-		for (int i = 0; i < nA[0]; ++i)
-			for (int j = 0; j < nA[1]; ++j)
+		for (int i = 0; i < nA.first; ++i)
+			for (int j = 0; j < nA.second; ++j)
 				C(i, j) += B();
 		return C;
 	}
-	else if (nA[0] == nB[0] && nA[1] == nB[1])
+	else if (nA.first == nB.first && nA.second == nB.second)
 	{
 		matrix C(A);
-		for (int i = 0; i < nA[0]; ++i)
-			for (int j = 0; j < nA[1]; ++j)
+		for (int i = 0; i < nA.first; ++i)
+			for (int j = 0; j < nA.second; ++j)
 				C(i, j) += B(i, j);
 		return C;
 	}
@@ -246,30 +246,30 @@ matrix operator-(const matrix& A, const matrix& B)
 
 matrix operator*(const matrix& A, const matrix& B)
 {
-	int* nA = get_size(A);
-	int* nB = get_size(B);
-	if (nA[0] == 1 && nA[1] == 1)
+	auto nA = get_size(A);
+	auto nB = get_size(B);
+	if (nA.first == 1 && nA.second == 1)
 	{
 		matrix C(B);
-		for (int i = 0; i < nB[0]; ++i)
-			for (int j = 0; j < nB[1]; ++j)
+		for (int i = 0; i < nB.first; ++i)
+			for (int j = 0; j < nB.second; ++j)
 				C(i, j) *= A();
 		return C;
 	}
-	else if (nB[0] == 1 && nB[1] == 1)
+	else if (nB.first == 1 && nB.second == 1)
 	{
 		matrix C(A);
-		for (int i = 0; i < nA[0]; ++i)
-			for (int j = 0; j < nA[1]; ++j)
+		for (int i = 0; i < nA.first; ++i)
+			for (int j = 0; j < nA.second; ++j)
 				C(i, j) *= B();
 		return C;
 	}
-	else if (nA[1] == nB[0])
+	else if (nA.second == nB.first)
 	{
-		matrix C(nA[0], nB[1]);
-		for (int i = 0; i < nA[0]; ++i)
-			for (int j = 0; j < nB[1]; ++j)
-				for (int k = 0; k < nA[1]; ++k)
+		matrix C(nA.first, nB.second);
+		for (int i = 0; i < nA.first; ++i)
+			for (int j = 0; j < nB.second; ++j)
+				for (int k = 0; k < nA.second; ++k)
 					C(i, j) += A(i, k) * B(k, j);
 		return C;
 	}
@@ -291,64 +291,64 @@ matrix operator/(const matrix& A, const matrix& B)
 
 matrix operator-(const matrix& A)
 {
-	int* n = get_size(A);
+	auto n = get_size(A);
 	matrix B(A);
-	for (int i = 0; i < n[0]; ++i)
-		for (int j = 0; j < n[1]; ++j)
+	for (int i = 0; i < n.first; ++i)
+		for (int j = 0; j < n.second; ++j)
 			B(i, j) = -A(i, j);
 	return B;
 }
 
 bool operator<(const matrix& A, const matrix& B)
 {
-	int* nA = get_size(A);
-	int* nB = get_size(B);
-	if (nA[0] != 1 || nA[1] != 1 || nB[0] != 1 || nB[1] != 1)
+	auto nA = get_size(A);
+	auto nB = get_size(B);
+	if (nA.first != 1 || nA.second != 1 || nB.first != 1 || nB.second != 1)
 		throw string("bool operator<(const matrix&, const matrix&):\noperator relacji jest zdefiniwany tylko dla macierzy 1x1");
 	return A() < B();
 }
 
 bool operator>(const matrix& A, const matrix& B)
 {
-	int* nA = get_size(A);
-	int* nB = get_size(B);
-	if (nA[0] != 1 || nA[1] != 1 || nB[0] != 1 || nB[1] != 1)
+	auto nA = get_size(A);
+	auto nB = get_size(B);
+	if (nA.first != 1 || nA.second != 1 || nB.first != 1 || nB.second != 1)
 		throw string("bool operator>(const matrix&, const matrix&):\noperator relacji jest zdefiniwany tylko dla macierzy 1x1");
 	return A() > B();
 }
 
 bool operator<=(const matrix& A, const matrix& B)
 {
-	int* nA = get_size(A);
-	int* nB = get_size(B);
-	if (nA[0] != 1 || nA[1] != 1 || nB[0] != 1 || nB[1] != 1)
+	auto nA = get_size(A);
+	auto nB = get_size(B);
+	if (nA.first != 1 || nA.second != 1 || nB.first != 1 || nB.second != 1)
 		throw string("bool operator<=(const matrix&, const matrix&):\noperator relacji jest zdefiniwany tylko dla macierzy 1x1");
 	return A() <= B();
 }
 
 bool operator>=(const matrix& A, const matrix& B)
 {
-	int* nA = get_size(A);
-	int* nB = get_size(B);
-	if (nA[0] != 1 || nA[1] != 1 || nB[0] != 1 || nB[1] != 1)
+	auto nA = get_size(A);
+	auto nB = get_size(B);
+	if (nA.first != 1 || nA.second != 1 || nB.first != 1 || nB.second != 1)
 		throw string("bool operator>=(const matrix&, const matrix&):\noperator relacji jest zdefiniwany tylko dla macierzy 1x1");
 	return A() >= B();
 }
 
 bool operator==(const matrix& A, const matrix& B)
 {
-	int* nA = get_size(A);
-	int* nB = get_size(B);
-	if (nA[0] != 1 || nA[1] != 1 || nB[0] != 1 || nB[1] != 1)
+	auto nA = get_size(A);
+	auto nB = get_size(B);
+	if (nA.first != 1 || nA.second != 1 || nB.first != 1 || nB.second != 1)
 		throw string("bool operator==(const matrix&, const matrix&):\noperator relacji jest zdefiniwany tylko dla macierzy 1x1");
 	return A() == B();
 }
 
 bool operator!=(const matrix& A, const matrix& B)
 {
-	int* nA = get_size(A);
-	int* nB = get_size(B);
-	if (nA[0] != 1 || nA[1] != 1 || nB[0] != 1 || nB[1] != 1)
+	auto nA = get_size(A);
+	auto nB = get_size(B);
+	if (nA.first != 1 || nA.second != 1 || nB.first != 1 || nB.second != 1)
 		throw string("bool operator!=(const matrix&, const matrix&):\noperator relacji jest zdefiniwany tylko dla macierzy 1x1");
 	return A() != B();
 }
@@ -407,27 +407,27 @@ matrix randn_mat(int nv, int mv)
 
 double m2d(const matrix& A)
 {
-	int* nA = get_size(A);
-	if (nA[0] != 1 || nA[1] != 1)
+	auto nA = get_size(A);
+	if (nA.first != 1 || nA.second != 1)
 		throw string("double m2d(const matrix&):\nzamiana macierzy na liczbe mozliwa jest tylko dla skalarow");
 	return A(0, 0);
 }
 
 double det(const matrix& A)
 {
-	int* nA = get_size(A);
-	if (nA[0] != nA[1])
+	auto nA = get_size(A);
+	if (nA.first != nA.second)
 		throw string("double det(const matrix&):\nmacierz musi byc kwadratowa");
 	double D = 0;
-	if (nA[0] == 1)
+	if (nA.first == 1)
 		D = A();
 	else
 	{
-		for (int k = 0; k < nA[0]; ++k)
+		for (int k = 0; k < nA.first; ++k)
 		{
-			matrix T(nA[0] - 1, nA[0] - 1);
-			for (int i = 0; i < nA[0] - 1; ++i)
-				for (int j = 0; j < nA[1] - 1; ++j)
+			matrix T(nA.first - 1, nA.first - 1);
+			for (int i = 0; i < nA.first - 1; ++i)
+				for (int j = 0; j < nA.second - 1; ++j)
 					T(i, j) = A(i + 1, j >= k ? j + 1 : j);
 			D = D + A(0, k) * pow(-1.0, k) * det(T);
 		}
@@ -442,18 +442,18 @@ matrix inv(const matrix& A)
 		double D = det(A);
 		if (D == 0)
 			throw string("matrix inv(const matrix&):\nwyznacznik macierzy wynosi 0");
-		int* nA = get_size(A);
-		matrix I(nA[0], nA[0]);
-		if (nA[0] == 1)
+		auto nA = get_size(A);
+		matrix I(nA.first, nA.first);
+		if (nA.first == 1)
 			I() = 1 / A();
 		else
 		{
-			for (int k = 0; k < nA[0]; ++k)
-				for (int l = 0; l < nA[1]; ++l)
+			for (int k = 0; k < nA.first; ++k)
+				for (int l = 0; l < nA.second; ++l)
 				{
-					matrix T(nA[0] - 1, nA[0] - 1);
-					for (int i = 0; i < nA[0] - 1; ++i)
-						for (int j = 0; j < nA[1] - 1; ++j)
+					matrix T(nA.first - 1, nA.first - 1);
+					for (int i = 0; i < nA.first - 1; ++i)
+						for (int j = 0; j < nA.second - 1; ++j)
 							T(i, j) = A(i >= k ? i + 1 : i, j >= l ? j + 1 : j);
 					I(k, l) = pow(-1.0, k + l) * det(T);
 				}
@@ -469,10 +469,10 @@ matrix inv(const matrix& A)
 
 matrix trans(const matrix& A)
 {
-	int* nA = get_size(A);
-	matrix B(nA[1], nA[0]);
-	for (int i = 0; i < nA[1]; ++i)
-		for (int j = 0; j < nA[0]; ++j)
+	auto nA = get_size(A);
+	matrix B(nA.second, nA.first);
+	for (int i = 0; i < nA.second; ++i)
+		for (int j = 0; j < nA.first; ++j)
 			B(i, j) = A(j, i);
 	return B;
 }
@@ -481,10 +481,10 @@ matrix pow(const matrix& A, int n)
 {
 	if (n < 0)
 		throw string("matrix pow(const matrix&,int):\nwykladnik potegi nie moze byc ujemny");
-	int* nA = get_size(A);
-	if (nA[0] != nA[1])
+	auto nA = get_size(A);
+	if (nA.first != nA.second)
 		throw string("matrix pow(const matrix&,int):\npotegowanie jest mozliwe tylko dla macierzy kwadratowych");
-	matrix B = ident_mat(nA[0]);
+	matrix B = ident_mat(nA.first);
 	for (int i = 1; i <= n; ++i)
 		B = B * A;
 	return B;
@@ -492,79 +492,79 @@ matrix pow(const matrix& A, int n)
 
 double norm(const matrix& A)
 {
-	int* nA = get_size(A);
-	if (nA[1] != 1)
+	auto nA = get_size(A);
+	if (nA.second != 1)
 		throw string("double norm(const matrix&):\nnorma jest zdefiniowana tylko dla wektorow pionowych");
 	double N = 0;
-	for (int i = 0; i < nA[0]; ++i)
+	for (int i = 0; i < nA.first; ++i)
 		N += pow(A(i), 2);
 	return sqrt(N);
 }
 
 matrix hcat(const matrix& A, const matrix& B)
 {
-	int* nA = get_size(A);
-	int* nB = get_size(B);
-	if (nA[0] != nB[0])
+	auto nA = get_size(A);
+	auto nB = get_size(B);
+	if (nA.first != nB.first)
 		throw string("matrix hcat(const matrix&,const matrix&):\nliczba wierszy macierzy musi byc taka sama");
-	matrix C(nA[0], nA[1] + nB[1]);
-	for (int i = 0; i < nA[0]; ++i)
+	matrix C(nA.first, nA.second + nB.second);
+	for (int i = 0; i < nA.first; ++i)
 	{
-		for (int j = 0; j < nA[1]; ++j)
+		for (int j = 0; j < nA.second; ++j)
 			C(i, j) = A(i, j);
-		for (int j = 0; j < nB[1]; ++j)
-			C(i, j + nA[1]) = B(i, j);
+		for (int j = 0; j < nB.second; ++j)
+			C(i, j + nA.second) = B(i, j);
 	}
 	return C;
 }
 
 matrix vcat(const matrix& A, const matrix& B)
 {
-	int* nA = get_size(A);
-	int* nB = get_size(B);
-	if (nA[1] != nB[1])
+	auto nA = get_size(A);
+	auto nB = get_size(B);
+	if (nA.second != nB.second)
 		throw string("matrix vcat(const matrix&,const matrix&):\nliczba kolumn macierzy musi byc taka sama");
-	matrix C(nA[0] + nB[0], nA[1]);
-	for (int i = 0; i < nA[0]; ++i)
-		for (int j = 0; j < nA[1]; ++j)
+	matrix C(nA.first + nB.first, nA.second);
+	for (int i = 0; i < nA.first; ++i)
+		for (int j = 0; j < nA.second; ++j)
 			C(i, j) = A(i, j);
-	for (int i = 0; i < nB[0]; ++i)
-		for (int j = 0; j < nB[1]; ++j)
-			C(i + nA[0], j) = B(i, j);
+	for (int i = 0; i < nB.first; ++i)
+		for (int j = 0; j < nB.second; ++j)
+			C(i + nA.first, j) = B(i, j);
 	return C;
 }
 
 matrix get_col(const matrix& A, int mv)
 {
-	int* n = get_size(A);
-	if (mv >= n[1] || mv < 0)
+	auto n = get_size(A);
+	if (mv >= n.second || mv < 0)
 		throw string("matrix get_col(const matrix&,int):\nnumer kolmuny jest poza zakresem");
-	matrix B(n[0], 1);
-	for (int i = 0; i < n[0]; ++i)
+	matrix B(n.first, 1);
+	for (int i = 0; i < n.first; ++i)
 		B(i, 0) = A(i, mv);
 	return B;
 }
 
 matrix get_row(const matrix& A, int nv)
 {
-	int* n = get_size(A);
-	if (nv >= n[0] || nv < 0)
+	auto n = get_size(A);
+	if (nv >= n.first || nv < 0)
 		throw string("matrix get_row(const matrix&,int):\nnumer wiersza jest poza zakresem");
-	matrix B(1, n[1]);
-	for (int j = 0; j < n[1]; ++j)
+	matrix B(1, n.second);
+	for (int j = 0; j < n.second; ++j)
 		B(0, j) = A(nv, j);
 	return B;
 }
 
 ostream& operator<<(ostream& OS, const matrix& A)
 {
-	int* nA = get_size(A);
+	auto nA = get_size(A);
 	ostringstream OSS;
 	string S;
 	string::size_type p;
 	for (int i = 0; ; ++i)
 	{
-		for (int j = 0; j < nA[1]; ++j)
+		for (int j = 0; j < nA.second; ++j)
 		{
 			OSS << A(i, j);
 			S = OSS.str();
@@ -574,7 +574,7 @@ ostream& operator<<(ostream& OS, const matrix& A)
 				S[p] = SEP_SYMBOL;
 			OS << S << "; ";
 		}
-		if (i == nA[0] - 1)
+		if (i == nA.first - 1)
 			return OS;
 		OS << endl;
 	}
@@ -585,9 +585,9 @@ istream& operator>>(istream& IS, matrix& A)
 	istringstream ISS;
 	string S;
 	string::size_type p;
-	int* nA = get_size(A);
-	for (int i = 0; i < nA[0]; ++i)
-		for (int j = 0; j < nA[1]; ++j)
+	auto nA = get_size(A);
+	for (int i = 0; i < nA.first; ++i)
+		for (int j = 0; j < nA.second; ++j)
 		{
 			getline(IS, S, ';');
 			p = S.find(SEP_SYMBOL);
@@ -604,10 +604,9 @@ istream& operator>>(istream& IS, matrix& A)
 	return IS;
 }
 
-int* get_size(const matrix& A)
+std::pair<int,int> get_size(const matrix& A)
 {
-	int* s = new int[2]{ A.n, A.m };
-	return s;
+	return { A.n, A.m };
 }
 
 int get_len(const matrix& A)

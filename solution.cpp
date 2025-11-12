@@ -1,4 +1,4 @@
-//Ten plik nie powinien byæ edytowany
+//Ten plik nie powinien byï¿½ edytowany
 
 #include"solution.h"
 
@@ -75,7 +75,7 @@ solution& solution::operator=(const solution& A)
 	return *this;
 }
 
-matrix solution::fit_fun(matrix(*ff)(matrix, matrix, matrix), matrix ud1, matrix ud2)
+matrix solution::fit_fun(std::function<matrix(matrix, matrix, matrix)> ff, matrix ud1, matrix ud2)
 {
 	try
 	{
@@ -89,7 +89,7 @@ matrix solution::fit_fun(matrix(*ff)(matrix, matrix, matrix), matrix ud1, matrix
 	}
 }
 
-matrix solution::grad(matrix(*gf)(matrix, matrix, matrix), matrix ud1, matrix ud2)
+matrix solution::grad(std::function<matrix(matrix, matrix, matrix)> gf, matrix ud1, matrix ud2)
 {
 	try
 	{
@@ -103,7 +103,7 @@ matrix solution::grad(matrix(*gf)(matrix, matrix, matrix), matrix ud1, matrix ud
 	}
 }
 
-matrix solution::hess(matrix(*Hf)(matrix, matrix, matrix), matrix ud1, matrix ud2)
+matrix solution::hess(std::function<matrix(matrix, matrix, matrix)> Hf, matrix ud1, matrix ud2)
 {
 	try
 	{

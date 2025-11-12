@@ -66,12 +66,10 @@ void lab0()
 	// Zapis symulacji do pliku csv
 	matrix Y0 = matrix(2, 1),							 // Y0 zawiera warunki pocz�tkowe
 		MT = matrix(2, new double[2]{m2d(opt.x), 0.5});	 // MT zawiera moment si�y dzia�aj�cy na wahad�o oraz czas dzia�ania
-	matrix *Y = solve_ode(df0, 0, 0.1, 10, Y0, NAN, MT); // rozwi�zujemy r�wnanie r�niczkowe
+	auto Y = solve_ode(df0, 0, 0.1, 10, Y0, NAN, MT); // rozwi�zujemy r�wnanie r�niczkowe
 	ofstream Sout("symulacja_lab0.csv");				 // definiujemy strumie� do pliku .csv
-	Sout << hcat(Y[0], Y[1]);							 // zapisyjemy wyniki w pliku
+	Sout << hcat(Y.first, Y.second);							 // zapisyjemy wyniki w pliku
 	Sout.close();										 // zamykamy strumie�
-	Y[0].~matrix();										 // usuwamy z pami�ci rozwi�zanie RR
-	Y[1].~matrix();
 }
 
 void lab1()
@@ -184,8 +182,8 @@ void lab2()
 	double t0 = 0.0;
 	double dt = 0.01;
 	double tend = 10.0;
-	matrix *Y = solve_ode(lab3dY, t0, dt, tend, Y0, k_opt, NAN);
-	int n = get_len(Y[0]);
+	auto Y = solve_ode(lab3dY, t0, dt, tend, Y0, k_opt, NAN);
+	int n = get_len(Y.first);
 
 	CSVStream Sram("symulacja_lab2_ramie.csv",',',{"t","alpha","omega","M"});
 
@@ -199,9 +197,9 @@ void lab2()
 
 	for (int i = 0; i < n; ++i)
 	{
-		double t = Y[0](i, 0);
-		double alpha_t = Y[1](i, 0);
-		double omega_t = Y[1](i, 1);
+		double t = Y.first(i, 0);
+		double alpha_t = Y.second(i, 0);
+		double omega_t = Y.second(i, 1);
 
 		double k1 = k_opt(0);
 		double k2 = k_opt(1);
@@ -210,8 +208,6 @@ void lab2()
 		Sram << t << alpha_t << omega_t  << M;
 	}
 
-	Y[0].~matrix();
-	Y[1].~matrix();
 }
 
 void lab3()

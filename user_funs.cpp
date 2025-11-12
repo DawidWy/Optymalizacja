@@ -18,15 +18,13 @@ matrix ff0R(matrix x, matrix ud1, matrix ud2)				// funkcja celu dla problemu rz
 	matrix y;												// y zawiera warto�� funkcji celu
 	matrix Y0 = matrix(2, 1),								// Y0 zawiera warunki pocz�tkowe
 		MT = matrix(2, new double[2] { m2d(x), 0.5 });		// MT zawiera moment si�y dzia�aj�cy na wahad�o oraz czas dzia�ania
-	matrix* Y = solve_ode(df0, 0, 0.1, 10, Y0, ud1, MT);	// rozwi�zujemy r�wnanie r�niczkowe
-	int n = get_len(Y[0]);									// d�ugo�� rozwi�zania
-	double teta_max = Y[1](0, 0);							// szukamy maksymalnego wychylenia wahad�a
+	auto Y = solve_ode(df0, 0, 0.1, 10, Y0, ud1, MT);	// rozwi�zujemy r�wnanie r�niczkowe
+	int n = get_len(Y.first);									// d�ugo�� rozwi�zania
+	double teta_max = Y.second(0, 0);							// szukamy maksymalnego wychylenia wahad�a
 	for (int i = 1; i < n; ++i)
-		if (teta_max < Y[1](i, 0))
-			teta_max = Y[1](i, 0);
+		if (teta_max < Y.second(i, 0))
+			teta_max = Y.second(i, 0);
 	y = abs(teta_max - m2d(ud1));							// warto�� funkcji celu (ud1 to za�o�one maksymalne wychylenie)
-	Y[0].~matrix();											// usuwamy z pami�ci rozwi�zanie RR
-	Y[1].~matrix();
 	return y;
 }
 
@@ -105,19 +103,17 @@ matrix ff1R(matrix x, matrix ud1, matrix ud2)
 	Y0(0) = 5.0;											// VA = 5 m^3
 	Y0(1) = 1.0;											// VB = 1 m^3  
 	Y0(2) = 20.0;											// TB = 20 C
-	matrix* Y = solve_ode(lab1dY, 0, 1, 2000, Y0, ud1, MT);	// rozwiązanie równania różniczkowego
-	int n = get_len(Y[0]);									// długość rozwiązania
+	auto Y = solve_ode(lab1dY, 0, 1, 2000, Y0, ud1, MT);	// rozwiązanie równania różniczkowego
+	int n = get_len(Y.first);									// długość rozwiązania
 	double T_max = 0;
 										
 	for (int i = 0; i < n; ++i) {							// szukamy maksymalnej temperatury w zbiorniku B
-		if (Y[1](i, 2) > T_max) {
-			T_max = Y[1](i, 2);
+		if (Y.second(i, 2) > T_max) {
+			T_max = Y.second(i, 2);
 		}
 	}
 
 	y = abs(T_max - 50.0);									// wartość funkcji celu (minimalizujemy różnicę od 50°C)
-	Y[0].~matrix();											// usuwamy z pamięci rozwiązanie RR
-	Y[1].~matrix();
 	return y;
 }
 
@@ -167,9 +163,9 @@ matrix ff3R(matrix x, matrix ud1, matrix ud2) {
     double t0   = 0.0;
     double dt   = 0.01;
     double tend = 10.0;
-    matrix* Y = solve_ode(lab3dY, t0, dt, tend, Y0, x, NAN);
+    auto Y = solve_ode(lab3dY, t0, dt, tend, Y0, x, NAN);
 
-    int n = get_len(Y[0]);
+    int n = get_len(Y.first);
     const double mr = 1.0;
     const double mc = 5.0;
     const double l  = 2.0;
@@ -180,8 +176,8 @@ matrix ff3R(matrix x, matrix ud1, matrix ud2) {
     double Q = 0.0;
 
     for (int i = 0; i < n; ++i) {
-        double alpha = Y[1](i, 0);
-        double omega = Y[1](i, 1);
+        double alpha = Y.second(i, 0);
+        double omega = Y.second(i, 1);
         double k1 = x(0);
         double k2 = x(1);
         double M  = k1 * (alpha_ref - alpha) + k2 * (omega_ref - omega);
@@ -191,7 +187,5 @@ matrix ff3R(matrix x, matrix ud1, matrix ud2) {
         Q += (10.0 * e_alpha * e_alpha + e_omega * e_omega + M * M) * dt;
     }
     y = Q;
-    Y[0].~matrix();
-    Y[1].~matrix();
     return y;
 }
