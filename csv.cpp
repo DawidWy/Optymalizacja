@@ -12,7 +12,8 @@ CSVStream::CSVStream(const std::string &filename, char sep, const std::vector<st
         file << header;
         file << separator;
     }
-    file << std::endl;
+    file << std::endl; 
+    headers_num = headers.size();
 }
 CSVStream::~CSVStream()
 {

@@ -10,3 +10,5 @@ matrix ff1T(matrix x, matrix ud1, matrix ud2);
 matrix ff1R(matrix x, matrix ud1, matrix ud2);
 matrix lab1dY(double t, matrix Y, matrix ud1, matrix ud2);
 matrix ff3T(matrix x, matrix ud1, matrix ud2);
+matrix lab3dY(double t, matrix Y, matrix ud1, matrix ud2);
+matrix ff3R(matrix x, matrix ud1, matrix ud2);
