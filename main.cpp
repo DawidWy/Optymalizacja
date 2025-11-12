@@ -130,7 +130,7 @@ void lab2(){
     // Parametry algorytmu
     double alphaR = 2.0;
     double betaR = 0.5;
-    double epsilonR = 1e-6;
+    double epsilonR = 0.0001;
 
 	// Losowanie tablicy punktów startowych
 	vector<pair<double,double>> pts(100);
