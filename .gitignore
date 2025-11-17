@@ -1,5 +1,5 @@
-*.o
+out/*
+bin/*
 *.csv
-main
-main.exe
 ./vscode
+./idea
