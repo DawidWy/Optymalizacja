@@ -146,38 +146,36 @@ matrix lab3dY(double t, matrix Y, matrix ud1, matrix ud2)
     const double b  = 0.25;
     const double alpha_ref  = 3.141592653589793;
     const double omega_ref  = 0.0;
-    const double I = (1.0 / 3.0) * mr * l * l + mc * l * l;
+    const double I = ((1.0 / 3.0) * mr + mc) * l * l;
     double M = k1 * (alpha_ref - alpha) + k2 * (omega_ref - omega);
     matrix dY(2, 1);
-    dY(0) = omega;
-    dY(1) = (M - b * omega) / I;
+    dY(0) = omega;					//da/dt
+    dY(1) = (M - b * omega) / I;    //d^2a/dt^2
     return dY;
 }
 
 matrix ff3R(matrix x, matrix ud1, matrix ud2) {
     matrix y;
     matrix Y0(2, 1);
-    Y0(0) = 0.0;
-    Y0(1) = 0.0;
+    Y0(0) = 0.0; // a0
+    Y0(1) = 0.0; // da/dt |0
 
     double t0   = 0.0;
-    double dt   = 0.01;
-    double tend = 10.0;
+    double dt   = 0.1;
+    double tend = 100.0;
     auto Y = solve_ode(lab3dY, t0, dt, tend, Y0, x, NAN);
-
-    int n = get_len(Y.first);
     const double mr = 1.0;
     const double mc = 5.0;
     const double l  = 2.0;
     const double b  = 0.25;
-    const double alpha_ref  = 3.141592653589793;
+    const double alpha_ref  = M_PI;
     const double omega_ref  = 0.0;
     const double I = (1.0 / 3.0) * mr * l * l + mc * l * l;
     double Q = 0.0;
 
-    for (int i = 0; i < n; ++i) {
-        double alpha = Y.second(i, 0);
-        double omega = Y.second(i, 1);
+    for (int i = 0; i < tend; ++i) {
+        double alpha = Y.second(0);
+        double omega = Y.second(1);
         double k1 = x(0);
         double k2 = x(1);
         double M  = k1 * (alpha_ref - alpha) + k2 * (omega_ref - omega);

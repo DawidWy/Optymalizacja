@@ -12,7 +12,8 @@ SRCS = main.cpp \
        opt_alg.cpp \
        solution.cpp \
        user_funs.cpp \
-	   csv.cpp
+	   csv.cpp \
+	   utils.cpp
 
 
 

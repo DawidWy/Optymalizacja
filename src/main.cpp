@@ -12,6 +12,7 @@ Data ostatniej modyfikacji: 30.09.2025
 #include "opt_alg.h"
 #include "solution.h"
 #include "csv.h"
+#include "utils.h"
 #include <cmath>
 #include <cstdlib>
 
@@ -164,12 +165,11 @@ void lab2()
 	}
 
 	matrix x0(2, 1);
-	x0(0) = 5.0;
-	x0(1) = 5.0;
+	x0 = rand_range({0,0},{20,20});
 	step = 1.0;
-	alpha = 2.0;
+	alpha = 0.5;
 	epsilon = 1e-1;
-	Nmax = 10000;
+	Nmax = 1000;
 	solution::clear_calls();
 	solution opt = HJ(ff3R, x0, step, alpha, epsilon, Nmax);
 	cout << "Problem rzeczywisty (ramie):" << endl;

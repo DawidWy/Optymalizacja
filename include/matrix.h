@@ -25,6 +25,8 @@ public:
 	matrix(int, double*); // throw (string);
 	matrix(int, int, double**); // throw (string);
 	matrix(const matrix&);
+	matrix(std::initializer_list<std::initializer_list<double>>);
+	matrix(std::initializer_list<double>);
 	~matrix();
 	matrix& operator=(const matrix&);
 	matrix operator[](int) const; // throw (string);

@@ -67,6 +67,52 @@ matrix::matrix(const matrix& A)
 	}
 }
 
+matrix::matrix(std::initializer_list<std::initializer_list<double>> l )
+{
+	int m = 0;
+	for(auto& elem : l){
+		if (m == 0)
+		{
+			m = elem.size();
+		}
+		else if (m != elem.size())
+		{
+			throw string("matrix::matrix(initializer_list<initializer_list<double>>):\nliczba kolumn musi byc taka sama w kazdym wierszu");
+		}
+	}
+	n = l.size();
+	M = new double*[n];
+	int i = 0;
+	for (auto& elem : l)
+	{
+		M[i] = new double[m];
+		int j = 0;
+		for (auto val : elem)
+		{
+			M[i][j] = val;
+			j++;
+		}
+		i++;
+	
+	}
+}
+
+matrix::matrix(std::initializer_list<double> L)
+{
+	n = L.size();
+	m = 1;
+	M = new double*[n];
+	int i = 0;
+	for (auto elem : L)
+	{
+		M[i] = new double[1];
+		M[i][0] = elem;
+		i++;
+	}
+}
+
+
+
 matrix::~matrix()
 {
 	for (int i = 0; i < n; ++i)
