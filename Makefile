@@ -1,6 +1,6 @@
 # Kompilator i flagi
 CXX = g++
-CXXFLAGS = -Wpedantic -O3 -std=c++23
+CXXFLAGS = -Wpedantic -O3 -std=c++23 
 
 # Nazwa programu
 TARGET = main
@@ -14,39 +14,28 @@ SRCS = main.cpp \
        user_funs.cpp \
 	   csv.cpp
 
-# Pliki obiektowe
-OBJS = $(SRCS:.cpp=.o)
+
+
+INC_DIR = include
+SRC_DIR = src
+OUT_DIR = out
+
+SRCS_FILES = $(patsubst %.cpp, $(SRC_DIR)/%.cpp, $(SRCS))
+OBJS       = $(patsubst %.cpp, $(OUT_DIR)/%.o,   $(SRCS))
 
 # Domyślny cel
 all: $(TARGET)
 	@$(MAKE) clean	
 # Budowanie programu
 $(TARGET): $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $(OBJS)
+	$(CXX) $(CXXFLAGS) -I$(INC_DIR) -o bin/$(TARGET) $(OBJS)
 
-# Specjalna reguła: main.cpp zależy od opt_alg.h
-main.o: main.cpp opt_alg.h
-	$(CXX) $(CXXFLAGS) -c main.cpp
+$(OUT_DIR)/%.o: $(SRC_DIR)/%.cpp
+	$(CXX) $(CXXFLAGS) -I$(INC_DIR) -c $< -o $@
 
-# Reguły dla pozostałych plików (każdy ma swój header)
-matrix.o: matrix.cpp matrix.h
-	$(CXX) $(CXXFLAGS) -c matrix.cpp
-
-ode_solver.o: ode_solver.cpp ode_solver.h
-	$(CXX) $(CXXFLAGS) -c ode_solver.cpp
-
-opt_alg.o: opt_alg.cpp opt_alg.h
-	$(CXX) $(CXXFLAGS) -c opt_alg.cpp
-
-solution.o: solution.cpp solution.h
-	$(CXX) $(CXXFLAGS) -c solution.cpp
-
-user_funs.o: user_funs.cpp user_funs.h
-	$(CXX) $(CXXFLAGS) -c user_funs.cpp
-
-csv.o: csv.cpp csv.h
-	$(CXX) $(CXXFLAGS) -c csv.cpp
-
+# Utwórz katalog wyjściowy, jeśli nie istnieje
+$(OUT_DIR):
+	mkdir -p $(OUT_DIR)
 
 # Czyszczenie plików tymczasowych
 clean:
