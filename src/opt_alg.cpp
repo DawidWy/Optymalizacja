@@ -498,33 +498,161 @@ solution Rosen(std::function<matrix(matrix,matrix,matrix)> ff, const matrix& x0,
     return Xopt;
 }
 
-solution pen(std::function<matrix(matrix,matrix,matrix)> ff, matrix x0, double c, double dc, double epsilon, int Nmax, matrix ud1, matrix ud2)
-{
-	try {
-		solution Xopt;
-		//Tu wpisz kod funkcji
-
-		return Xopt;
-	}
-	catch (string ex_info)
-	{
-		throw ("solution pen(...):\n" + ex_info);
-	}
+// Funkcja pomocnicza do obliczania normy euklidesowej różnicy wektorów (potrzebna do warunku stopu)
+double norm(matrix m) {
+    double sum = 0.0;
+    for (int i = 0; i < m.get_rows(); ++i) {
+        for (int j = 0; j < m.get_cols(); ++j) {
+            sum += m(i, j) * m(i, j);
+        }
+    }
+    return sqrt(sum);
 }
 
-solution sym_NM(std::function<matrix(matrix,matrix,matrix)> ff, matrix x0, double s, double alpha, double beta, double gamma, double delta, double epsilon, int Nmax, matrix ud1, matrix ud2)
+solution sym_NM(matrix(*ff)(matrix, matrix, matrix), matrix x0, double s, double alpha, double beta, double gamma, double delta, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
-	try
-	{
-		solution Xopt;
-		//Tu wpisz kod funkcji
+    try
+    {
+        solution Xopt;
+        int n = x0.get_rows();
+        std::vector<matrix> p; 
+        p.push_back(x0);
+        for (int i = 0; i < n; ++i) {
+            matrix ei(n, 1, 0.0);
+            ei(i, 0) = 1.0;      
+            p.push_back(x0 + ei * s);
+        }
+        std::vector<double> f_values(n + 1);
+        int f_calls = 0;
+        while (true) {
+            for (int i = 0; i <= n; ++i) {
+                 if (f_calls == 0) { 
+                    f_values[i] = ff(p[i], ud1, ud2)(0, 0);
+                    f_calls++;
+                 }
+            }
+            int i_min = 0;
+            int i_max = 0;
+            for (int i = 1; i <= n; ++i) {
+                if (f_values[i] < f_values[i_min]) i_min = i;
+                if (f_values[i] > f_values[i_max]) i_max = i;
+            }
+            matrix p_centroid(n, 1, 0.0);
+            for (int i = 0; i <= n; ++i) {
+                if (i != i_max) {
+                    p_centroid = p_centroid + p[i];
+                }
+            }
+            p_centroid = p_centroid * (1.0 / double(n));
+            matrix p_odb = p_centroid + (p_centroid - p[i_max]) * alpha;
+            double f_odb = ff(p_odb, ud1, ud2)(0, 0);
+            f_calls++;
+            if (f_odb < f_values[i_min]) {
+                matrix p_e = p_centroid + (p_odb - p_centroid) * gamma;
+                double f_e = ff(p_e, ud1, ud2)(0, 0);
+                f_calls++;
 
-		return Xopt;
-	}
-	catch (string ex_info)
-	{
-		throw ("solution sym_NM(...):\n" + ex_info);
-	}
+                if (f_e < f_odb) {
+                    p[i_max] = p_e;     
+                    f_values[i_max] = f_e;
+                } else {
+                    p[i_max] = p_odb; 
+                    f_values[i_max] = f_odb;
+                }
+            } 
+            else {
+                if (f_odb < f_values[i_max]) { 
+                    p[i_max] = p_odb;   
+                    f_values[i_max] = f_odb;
+                } else {
+                    matrix p_z = p_centroid + (p[i_max] - p_centroid) * beta;
+                    double f_z = ff(p_z, ud1, ud2)(0, 0);
+                    f_calls++;
+                    if (f_z >= f_values[i_max]) {
+                        for (int i = 0; i <= n; ++i) {
+                            if (i != i_min) {
+                                p[i] = (p[i] + p[i_min]) * delta;
+                                f_values[i] = ff(p[i], ud1, ud2)(0, 0);
+                                f_calls++;
+                            }
+                        }
+                    } else {
+                        p[i_max] = p_z; 
+                        f_values[i_max] = f_z;
+                    }
+                }
+            }
+            if (f_calls > Nmax) {
+                Xopt.x = p[i_min];
+                Xopt.y = matrix(f_values[i_min]);
+                Xopt.f_calls = f_calls;
+                throw std::string("Przekroczono maksymalna liczbe wywołań funkcji (Nmax) w metodzie Neldera-Meada."); 
+            }
+            bool converged = true;
+            for (int i = 0; i <= n; ++i) {
+                if (norm(p[i_min] - p[i]) >= epsilon) {
+                    converged = false;
+                    break;
+                }
+            }
+            if (converged) {
+                Xopt.x = p[i_min];
+                Xopt.y = matrix(f_values[i_min]);
+                Xopt.f_calls = f_calls;
+                return Xopt;
+            }
+        }
+    }
+    catch (string ex_info)
+    {
+        throw ("solution sym_NM(...):\n" + ex_info);
+    }
+}
+
+solution pen(matrix(*ff)(matrix, matrix, matrix), matrix x0, double c, double dc, double epsilon, int Nmax, matrix ud1, matrix ud2)
+{
+    try {
+        solution Xopt;
+        matrix x_curr = x0;   
+        matrix x_prev = x0;
+        matrix current_ud1 = ud1; 
+
+        int total_calls = 0;
+        int i = 0;
+        double nm_s = 0.5;
+        double nm_alpha = 1.0;
+        double nm_beta = 0.5;
+        double nm_gamma = 2.0;
+        double nm_delta = 0.5;
+        double nm_epsilon = epsilon; 
+
+        do {
+            i++;
+            if(current_ud1.get_rows() == 0) current_ud1 = matrix(1, 1);
+            current_ud1(0, 0) = c; 
+            solution inner_sol = sym_NM(ff, x_curr, nm_s, nm_alpha, nm_beta, nm_gamma, nm_delta, nm_epsilon, Nmax - total_calls, current_ud1, ud2);
+            
+            x_prev = x_curr;
+            x_curr = inner_sol.x;
+            total_calls += inner_sol.f_calls;
+
+            c = dc * c;
+
+            if (total_calls > Nmax) {
+                throw std::string("Przekroczono maksymalna liczbe wywołań funkcji (Nmax) w metodzie funkcji kary.");
+            }
+
+            Xopt = inner_sol;
+            Xopt.f_calls = total_calls;
+
+        } while (norm(x_curr - x_prev) >= epsilon);
+
+        return Xopt;
+    }
+    catch (string ex_info)
+    {
+        throw ("solution pen(...):\n" + ex_info);
+    }
 }
 
 solution SD(std::function<matrix(matrix,matrix,matrix)> ff, matrix(*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
@@ -604,6 +732,99 @@ solution Powell(std::function<matrix(matrix,matrix,matrix)> ff, matrix x0, doubl
 }
 
 solution EA(std::function<matrix(matrix,matrix,matrix)> ff, int N, matrix lb, matrix ub, int mi, int lambda, matrix sigma0, double epsilon, int Nmax, matrix ud1, matrix ud2)
+{
+	try
+	{
+		solution Xopt;
+		//Tu wpisz kod funkcji
+
+		return Xopt;
+	}
+	catch (string ex_info)
+	{
+		throw ("solution EA(...):\n" + ex_info);
+	}
+}
+
+
+
+solution SD(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
+{
+	try
+	{
+		solution Xopt;
+		//Tu wpisz kod funkcji
+
+		return Xopt;
+	}
+	catch (string ex_info)
+	{
+		throw ("solution SD(...):\n" + ex_info);
+	}
+}
+
+solution CG(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
+{
+	try
+	{
+		solution Xopt;
+		//Tu wpisz kod funkcji
+
+		return Xopt;
+	}
+	catch (string ex_info)
+	{
+		throw ("solution CG(...):\n" + ex_info);
+	}
+}
+
+solution Newton(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, matrix),
+	matrix(*Hf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
+{
+	try
+	{
+		solution Xopt;
+		//Tu wpisz kod funkcji
+
+		return Xopt;
+	}
+	catch (string ex_info)
+	{
+		throw ("solution Newton(...):\n" + ex_info);
+	}
+}
+
+solution golden(matrix(*ff)(matrix, matrix, matrix), double a, double b, double epsilon, int Nmax, matrix ud1, matrix ud2)
+{
+	try
+	{
+		solution Xopt;
+		//Tu wpisz kod funkcji
+
+		return Xopt;
+	}
+	catch (string ex_info)
+	{
+		throw ("solution golden(...):\n" + ex_info);
+	}
+}
+
+solution Powell(matrix(*ff)(matrix, matrix, matrix), matrix x0, double epsilon, int Nmax, matrix ud1, matrix ud2)
+{
+	try
+	{
+		solution Xopt;
+		//Tu wpisz kod funkcji
+
+		return Xopt;
+	}
+	catch (string ex_info)
+	{
+		throw ("solution Powell(...):\n" + ex_info);
+	}
+}
+
+solution EA(matrix(*ff)(matrix, matrix, matrix), int N, matrix lb, matrix ub, int mi, int lambda, matrix sigma0, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
 	try
 	{
