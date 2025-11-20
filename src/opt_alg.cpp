@@ -499,98 +499,129 @@ solution Rosen(std::function<matrix(matrix,matrix,matrix)> ff, const matrix& x0,
 }
 
 // Funkcja pomocnicza do obliczania normy euklidesowej różnicy wektorów (potrzebna do warunku stopu)
-double norm(matrix m) {
+double norm_NM(const matrix& m)
+{
+    pair<int,int> size = get_size(m);
+    int rows = size.first;
+    int cols = size.second;
+
     double sum = 0.0;
-    for (int i = 0; i < m.get_rows(); ++i) {
-        for (int j = 0; j < m.get_cols(); ++j) {
-            sum += m(i, j) * m(i, j);
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < cols; ++j) {
+            double v = m(i, j);
+            sum += v * v;
         }
     }
     return sqrt(sum);
 }
 
-solution sym_NM(matrix(*ff)(matrix, matrix, matrix), matrix x0, double s, double alpha, double beta, double gamma, double delta, double epsilon, int Nmax, matrix ud1, matrix ud2)
+
+solution sym_NM(std::function<matrix(matrix, matrix, matrix)> ff, matrix x0, double s,
+                double alpha, double beta, double gamma, double delta,
+                double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
     try
     {
         solution Xopt;
-        int n = x0.get_rows();
-        std::vector<matrix> p; 
+        pair<int,int> size = get_size(x0);
+		int n = size.first;
+        // przygotuj simplex: x0 oraz x0 + s*e_i
+        std::vector<matrix> p;
+        p.reserve(n + 1);
         p.push_back(x0);
         for (int i = 0; i < n; ++i) {
             matrix ei(n, 1, 0.0);
-            ei(i, 0) = 1.0;      
+            ei(i, 0) = 1.0;
             p.push_back(x0 + ei * s);
         }
-        std::vector<double> f_values(n + 1);
+
+        // wektor wartości funkcji (n+1 elementów)
+        std::vector<double> f_values(n + 1, 0.0);
         int f_calls = 0;
+
+        // --- WAŻNE: zainicjalizuj wszystkie wartości funkcji przed pętlą ---
+        for (int i = 0; i <= n; ++i) {
+            matrix fv = ff(p[i], ud1, ud2);
+            f_values[i] = fv(0, 0);
+            ++f_calls;
+        }
+
         while (true) {
-            for (int i = 0; i <= n; ++i) {
-                 if (f_calls == 0) { 
-                    f_values[i] = ff(p[i], ud1, ud2)(0, 0);
-                    f_calls++;
-                 }
-            }
+            // znajdź indeksy najlepszego i najgorszego
             int i_min = 0;
             int i_max = 0;
             for (int i = 1; i <= n; ++i) {
                 if (f_values[i] < f_values[i_min]) i_min = i;
                 if (f_values[i] > f_values[i_max]) i_max = i;
             }
+
+            // centroid z pominięciem najgorszego punktu
             matrix p_centroid(n, 1, 0.0);
             for (int i = 0; i <= n; ++i) {
-                if (i != i_max) {
-                    p_centroid = p_centroid + p[i];
-                }
+                if (i == i_max) continue;
+                p_centroid = p_centroid + p[i];
             }
             p_centroid = p_centroid * (1.0 / double(n));
+
+            // odbicie (reflection)
             matrix p_odb = p_centroid + (p_centroid - p[i_max]) * alpha;
             double f_odb = ff(p_odb, ud1, ud2)(0, 0);
-            f_calls++;
+            ++f_calls;
+
+            // ekspansja (jeśli odbicie lepsze niż najlepszy)
             if (f_odb < f_values[i_min]) {
-                matrix p_e = p_centroid + (p_odb - p_centroid) * gamma;
+                matrix p_e = p_centroid + (p_odb - p_centroid) * gamma; // expansion
                 double f_e = ff(p_e, ud1, ud2)(0, 0);
-                f_calls++;
+                ++f_calls;
 
                 if (f_e < f_odb) {
-                    p[i_max] = p_e;     
+                    p[i_max] = p_e;
                     f_values[i_max] = f_e;
                 } else {
-                    p[i_max] = p_odb; 
+                    p[i_max] = p_odb;
                     f_values[i_max] = f_odb;
                 }
-            } 
+            }
             else {
-                if (f_odb < f_values[i_max]) { 
-                    p[i_max] = p_odb;   
+                // jeśli odbicie poprawiło względem najgorszego, zastąp
+                if (f_odb < f_values[i_max]) {
+                    p[i_max] = p_odb;
                     f_values[i_max] = f_odb;
                 } else {
-                    matrix p_z = p_centroid + (p[i_max] - p_centroid) * beta;
+                    // kontrakcja
+                    matrix p_z = p_centroid + (p[i_max] - p_centroid) * beta; // contraction
                     double f_z = ff(p_z, ud1, ud2)(0, 0);
-                    f_calls++;
+                    ++f_calls;
+
                     if (f_z >= f_values[i_max]) {
+                        // shrink: przybliż wszystkie punkty do najlepszego
                         for (int i = 0; i <= n; ++i) {
-                            if (i != i_min) {
-                                p[i] = (p[i] + p[i_min]) * delta;
-                                f_values[i] = ff(p[i], ud1, ud2)(0, 0);
-                                f_calls++;
-                            }
+                            if (i == i_min) continue;
+                            // poprawna formuła shrink: x_i = x_min + delta*(x_i - x_min)
+                            p[i] = p[i_min] + (p[i] - p[i_min]) * delta;
+                            f_values[i] = ff(p[i], ud1, ud2)(0, 0);
+                            ++f_calls;
                         }
                     } else {
-                        p[i_max] = p_z; 
+                        // zaakceptuj kontrakcję
+                        p[i_max] = p_z;
                         f_values[i_max] = f_z;
                     }
                 }
             }
-            if (f_calls > Nmax) {
+
+            // sprawdź limit wywołań
+            if (f_calls >= Nmax) {
                 Xopt.x = p[i_min];
                 Xopt.y = matrix(f_values[i_min]);
                 Xopt.f_calls = f_calls;
-                throw std::string("Przekroczono maksymalna liczbe wywołań funkcji (Nmax) w metodzie Neldera-Meada."); 
+                throw std::string("Przekroczono maksymalna liczbe wywołań funkcji (Nmax) w metodzie Neldera-Meada.");
             }
+
+            // kryterium zbieżności: odległości od najlepszego punktu
             bool converged = true;
             for (int i = 0; i <= n; ++i) {
-                if (norm(p[i_min] - p[i]) >= epsilon) {
+                if (norm_NM(p[i_min] - p[i]) >= epsilon) {
                     converged = false;
                     break;
                 }
@@ -609,43 +640,42 @@ solution sym_NM(matrix(*ff)(matrix, matrix, matrix), matrix x0, double s, double
     }
 }
 
-solution pen(matrix(*ff)(matrix, matrix, matrix), matrix x0, double c, double dc, double epsilon, int Nmax, matrix ud1, matrix ud2)
+
+solution pen(std::function<matrix(matrix, matrix, matrix)> ff, matrix x0, double c, double dc, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
     try {
         solution Xopt;
-        matrix x_curr = x0;   
+        matrix x_curr = x0;
         matrix x_prev = x0;
-        matrix current_ud1 = ud1; 
+        
+        matrix c_container(1, 1); 
 
         int total_calls = 0;
-        int i = 0;
-        double nm_s = 0.5;
-        double nm_alpha = 1.0;
-        double nm_beta = 0.5;
-        double nm_gamma = 2.0;
-        double nm_delta = 0.5;
-        double nm_epsilon = epsilon; 
+        
+        double s = 0.5;      // Długość boku początkowego
+        double alpha = 1.0;
+        double beta = 0.5;  
+        double gamma = 2.0;
+        double delta = 0.5; 
 
+        // Pętla zewnętrzna metody funkcji kary
         do {
-            i++;
-            if(current_ud1.get_rows() == 0) current_ud1 = matrix(1, 1);
-            current_ud1(0, 0) = c; 
-            solution inner_sol = sym_NM(ff, x_curr, nm_s, nm_alpha, nm_beta, nm_gamma, nm_delta, nm_epsilon, Nmax - total_calls, current_ud1, ud2);
-            
+            // 1. Zapisujemy aktualne c do kontenera
+            c_container(0, 0) = c;
+
+            solution inner_sol = sym_NM(ff, x_curr, s, alpha, beta, gamma, delta, epsilon, Nmax - total_calls, ud1, c_container);
+
             x_prev = x_curr;
             x_curr = inner_sol.x;
             total_calls += inner_sol.f_calls;
-
+                        Xopt = inner_sol;
+            Xopt.f_calls = total_calls;
             c = dc * c;
-
-            if (total_calls > Nmax) {
-                throw std::string("Przekroczono maksymalna liczbe wywołań funkcji (Nmax) w metodzie funkcji kary.");
+            if (total_calls >= Nmax) {
+                throw std::string("Przekroczono Nmax w metodzie funkcji kary (pen).");
             }
 
-            Xopt = inner_sol;
-            Xopt.f_calls = total_calls;
-
-        } while (norm(x_curr - x_prev) >= epsilon);
+        } while (norm(x_curr - x_prev) > epsilon);
 
         return Xopt;
     }

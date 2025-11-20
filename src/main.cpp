@@ -28,7 +28,7 @@ int main()
 {
 	try
 	{
-		lab2();
+		lab3();
 	}
 	catch (string EX_INFO)
 	{
@@ -152,7 +152,7 @@ void lab2()
 		b = ((rand() % 200) / 100.0) - 1;
 		alpha = 0.9;
 		X = matrix(2, new double[2]{a, b});
-		solution hooke = HJ(ff3T, X, step, alpha, epsilon, Nmax);
+		solution hooke = HJ(ff2T, X, step, alpha, epsilon, Nmax);
 		Sout << i << a  << b  << hooke.x(0)  << hooke.x(1)  << hooke.y << solution::f_calls;
 		if (abs(hooke.x(0) - 0.0) < 0.001 && abs(hooke.x(1) - 0.0) < 0.001)
 		{
@@ -171,7 +171,7 @@ void lab2()
 	epsilon = 1e-1;
 	Nmax = 1000;
 	solution::clear_calls();
-	solution opt = HJ(ff3R, x0, step, alpha, epsilon, Nmax);
+	solution opt = HJ(ff2R, x0, step, alpha, epsilon, Nmax);
 	cout << "Problem rzeczywisty (ramie):" << endl;
 	cout << opt << endl;
 	matrix k_opt = opt.x;
@@ -182,7 +182,7 @@ void lab2()
 	double t0 = 0.0;
 	double dt = 0.01;
 	double tend = 10.0;
-	auto Y = solve_ode(lab3dY, t0, dt, tend, Y0, k_opt, NAN);
+	auto Y = solve_ode(lab2dY, t0, dt, tend, Y0, k_opt, NAN);
 	int n = get_len(Y.first);
 
 	CSVStream Sram("symulacja_lab2_ramie.csv",',',{"t","alpha","omega","M"});
@@ -210,8 +210,52 @@ void lab2()
 
 }
 
-void lab3()
-{
+void lab3() {
+  double epsilon = 1E-3;
+  int Nmax = 10000;
+  double c_inside = 100;
+  double dc_inside = 0.2;
+  double c_outside = 1.0;
+  double dc_outside = 1.5;
+  std::ofstream Sout("symulacja_lab3.csv");
+  Sout << "x0_1;x0_2;x1_out;x2_out;norm_out;y_out;f_calls_out;x1_in;x2_in;norm_"
+          "in;y_in;f_calls_in\n";
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_real_distribution<> x0_dist(1.5, 5.5);
+  std::stringstream test_ss;
+  solution test_sol;
+  matrix a = matrix(4.0);
+  matrix test_x0{};
+  for (int i = 0; i < 3; ++i) {
+    if (i == 0)
+      a = matrix(4.0);
+    else if (i == 1)
+      a = matrix(4.4934);
+    else
+      a = matrix(5.0);
+    for (int j = 0; j < 100; ++j) {
+      test_x0 = matrix(2, new double[2]{x0_dist(gen), x0_dist(gen)});
+      test_ss << test_x0(0) << "X ;" << test_x0(1) << "X;";
+      // Zewnętrzne rozwiązanie
+      test_sol =
+          pen(ff3T_outside, test_x0, c_outside, dc_outside, epsilon, Nmax, a);
+      // cout << test_sol;
+      test_ss << test_sol.x(0) << "X ;" << test_sol.x(1) << "X ;"
+              << sqrt(pow(test_sol.x(0), 2) + pow(test_sol.x(1), 2)) << "X ;"
+              << test_sol.y << "X ;" << test_sol.f_calls << "X ;";
+      solution::clear_calls();
+      test_sol =
+          pen(ff3T_inside, test_x0, c_inside, dc_inside, epsilon, Nmax, a);
+      // cout << test_sol;
+      test_ss << test_sol.x(0) << "X ;" << test_sol.x(1) << "X ;"
+              << sqrt(pow(test_sol.x(0), 2) + pow(test_sol.x(1), 2)) << "X ;"
+              << test_sol.y << "X ;" << test_sol.f_calls << "X \n";
+      solution::clear_calls();
+    }
+  }
+  Sout << test_ss.str();
+  Sout.close();
 }
 
 void lab4()

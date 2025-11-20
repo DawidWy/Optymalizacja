@@ -127,14 +127,14 @@ matrix lab1dY(matrix x, matrix ud1, double a, double b, double Va, double Pa, do
 	return y;
 }
 
-matrix ff3T(matrix x, matrix ud1, matrix ud2) {
+matrix ff2T(matrix x, matrix ud1, matrix ud2) {
 	double x1 = x(0);
 	double x2 = x(1);
 	double result = pow(x1, 2) + pow(x2, 2) - cos(2.5 * 3.14 * x1) - cos(2.5 * 3.14 * x2) + 2;
 	return matrix(1, 1, result);
 }
 
-matrix lab3dY(double t, matrix Y, matrix ud1, matrix ud2)
+matrix lab2dY(double t, matrix Y, matrix ud1, matrix ud2)
 {
     double alpha = Y(0);
     double omega = Y(1);
@@ -154,7 +154,7 @@ matrix lab3dY(double t, matrix Y, matrix ud1, matrix ud2)
     return dY;
 }
 
-matrix ff3R(matrix x, matrix ud1, matrix ud2) {
+matrix ff2R(matrix x, matrix ud1, matrix ud2) {
     matrix y;
     matrix Y0(2, 1);
     Y0(0) = 0.0; // a0
@@ -163,7 +163,7 @@ matrix ff3R(matrix x, matrix ud1, matrix ud2) {
     double t0   = 0.0;
     double dt   = 0.1;
     double tend = 100.0;
-    auto Y = solve_ode(lab3dY, t0, dt, tend, Y0, x, NAN);
+    auto Y = solve_ode(lab2dY, t0, dt, tend, Y0, x, NAN);
     const double mr = 1.0;
     const double mc = 5.0;
     const double l  = 2.0;
@@ -186,4 +186,61 @@ matrix ff3R(matrix x, matrix ud1, matrix ud2) {
     }
     y = Q;
     return y;
+}
+
+matrix ff3T_outside(matrix x, matrix ud1, matrix ud2)
+{
+    double x0 = x(0); // x1 w zapisie matematycznym
+    double x1 = x(1); // x2 w zapisie matematycznym
+    double a = ud1(0);
+    double c = ud2(0);
+
+    // 1. Obliczenie funkcji celu (taka sama jak poprzednio)
+    double term = sqrt(pow(x0 / M_PI, 2) + pow(x1 / M_PI, 2));
+    double y = 0;
+    if (abs(term) < 1e-10) y = M_PI;
+    else y = sin(M_PI * term) / term;
+
+    // 2. Definicja ograniczeń g(x) <= 0
+    double g1 = -x0 + 1.0;
+    double g2 = -x1 + 1.0;
+    double g3 = sqrt(pow(x0, 2) + pow(x1, 2)) - a;
+
+    double penalty = 0.0;
+
+    // 3. Sprawdzanie naruszeń i dodawanie kary
+    // Jeśli g > 0, dodajemy c * g^2
+    if (g1 > 0) penalty += c * pow(g1, 2);
+    if (g2 > 0) penalty += c * pow(g2, 2);
+    if (g3 > 0) penalty += c * pow(g3, 2);
+
+    return matrix(y + penalty);
+}
+
+matrix ff3T_inside(matrix x, matrix ud1, matrix ud2)
+{
+    double x0 = x(0);
+    double x1 = x(1);
+    double a = ud1(0);
+    double c = ud2(0);
+
+    double g1 = -x0 + 1.0;
+    double g2 = -x1 + 1.0;
+    double g3 = sqrt(pow(x0, 2) + pow(x1, 2)) - a;
+
+    if (g1 >= 0 || g2 >= 0 || g3 >= 0) {
+        return matrix(1e20);
+    }
+
+    double term = sqrt(pow(x0 / M_PI, 2) + pow(x1 / M_PI, 2));
+    double y = 0;
+    if (abs(term) < 1e-10) y = M_PI;
+    else y = sin(M_PI * term) / term;
+
+    double barrier = 0.0;
+    barrier += -1.0 / g1;
+    barrier += -1.0 / g2;
+    barrier += -1.0 / g3;
+
+    return matrix(y + c * barrier);
 }
