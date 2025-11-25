@@ -15,6 +15,7 @@ Data ostatniej modyfikacji: 30.09.2025
 #include "utils.h"
 #include <cmath>
 #include <cstdlib>
+#include <random>
 
 void lab0();
 void lab1();
@@ -222,18 +223,24 @@ void lab3() {
           "in;y_in;f_calls_in\n";
   std::random_device rd;
   std::mt19937 gen(rd());
-  std::uniform_real_distribution<> x0_dist(1, 2);
+  std::uniform_real_distribution<> x0_dist;
   std::stringstream test_ss;
   solution test_sol;
   matrix a = matrix(4.0);
   matrix test_x0{};
   for (int i = 0; i < 3; ++i) {
-    if (i == 0)
-      a = matrix(4.0);
-    else if (i == 1)
-      a = matrix(4.4934);
-    else
-      a = matrix(5.0);
+    if (i == 0){
+	  a = matrix(4.0);
+	  x0_dist = std::uniform_real_distribution<>(1,2);
+	}
+    else if (i == 1){
+	  a = matrix(4.4934);
+	  x0_dist = std::uniform_real_distribution<>(1,sqrt(4.4934));
+	}
+    else {
+	a = matrix(5.0);
+	  x0_dist = std::uniform_real_distribution<>(1,sqrt(5));
+	}
     for (int j = 0; j < 100; ++j) {
       test_x0 = matrix(2, new double[2]{x0_dist(gen), x0_dist(gen)});
       test_ss << test_x0(0) << ";" << test_x0(1) << ";";
