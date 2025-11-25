@@ -321,6 +321,13 @@ matrix ff3R(matrix x, matrix ud1,matrix ud2) {
     if(x_50 > 7) {
         penalty += 1000 * (7 - x_50)*(7 - x_50);
     }
+
+    if(x(1) < -10) {
+        penalty += 1000 * (-10 - x(1))*(-10 - x(1));
+    }
+    if(x(1) > 10) {
+        penalty += 1000 * (10 - x(1))*(10 - x(1));
+    }
     
     return -x_end + penalty;
 }
