@@ -1,6 +1,7 @@
 # Kompilator i flagi
 CXX = g++
 CXXFLAGS = -Wpedantic -O3 -std=c++23 
+#CXXFLAGS = -Wpedantic -O0 -g -fno-omit-frame-pointer -std=c++23
 
 # Nazwa programu
 TARGET = main
