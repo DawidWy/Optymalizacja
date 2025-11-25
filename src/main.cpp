@@ -237,20 +237,15 @@ void lab3() {
     for (int j = 0; j < 100; ++j) {
       test_x0 = matrix(2, new double[2]{x0_dist(gen), x0_dist(gen)});
       test_ss << test_x0(0) << "X ;" << test_x0(1) << "X;";
-      // Zewnętrzne rozwiązanie
-      test_sol =
-          pen(ff3T_outside, test_x0, c_outside, dc_outside, epsilon, Nmax, a);
-      // cout << test_sol;
+      test_sol = pen(ff3T_outside, test_x0, c_outside, dc_outside, epsilon, Nmax, a);
       test_ss << test_sol.x(0) << "X ;" << test_sol.x(1) << "X ;"
               << sqrt(pow(test_sol.x(0), 2) + pow(test_sol.x(1), 2)) << "X ;"
-              << test_sol.y << "X ;" << test_sol.f_calls << "X ;";
+              << test_sol.y(0) << "X ;" << solution::f_calls << "X ;";
       solution::clear_calls();
-      test_sol =
-          pen(ff3T_inside, test_x0, c_inside, dc_inside, epsilon, Nmax, a);
-      // cout << test_sol;
+      test_sol = pen(ff3T_inside, test_x0, c_inside, dc_inside, epsilon, Nmax, a);
       test_ss << test_sol.x(0) << "X ;" << test_sol.x(1) << "X ;"
               << sqrt(pow(test_sol.x(0), 2) + pow(test_sol.x(1), 2)) << "X ;"
-              << test_sol.y << "X ;" << test_sol.f_calls << "X \n";
+              << test_sol.y(0) << "X ;" << solution::f_calls << "X \n";
       solution::clear_calls();
     }
   }

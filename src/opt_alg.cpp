@@ -525,7 +525,6 @@ solution sym_NM(std::function<matrix(matrix, matrix, matrix)> ff, matrix x0, dou
         solution Xopt;
         pair<int,int> size = get_size(x0);
 		int n = size.first;
-        // przygotuj simplex: x0 oraz x0 + s*e_i
         std::vector<matrix> p;
         p.reserve(n + 1);
         p.push_back(x0);
@@ -535,11 +534,9 @@ solution sym_NM(std::function<matrix(matrix, matrix, matrix)> ff, matrix x0, dou
             p.push_back(x0 + ei * s);
         }
 
-        // wektor wartości funkcji (n+1 elementów)
         std::vector<double> f_values(n + 1, 0.0);
         int f_calls = 0;
 
-        // --- WAŻNE: zainicjalizuj wszystkie wartości funkcji przed pętlą ---
         for (int i = 0; i <= n; ++i) {
             matrix fv = ff(p[i], ud1, ud2);
             f_values[i] = fv(0, 0);
@@ -547,7 +544,6 @@ solution sym_NM(std::function<matrix(matrix, matrix, matrix)> ff, matrix x0, dou
         }
 
         while (true) {
-            // znajdź indeksy najlepszego i najgorszego
             int i_min = 0;
             int i_max = 0;
             for (int i = 1; i <= n; ++i) {
@@ -555,22 +551,17 @@ solution sym_NM(std::function<matrix(matrix, matrix, matrix)> ff, matrix x0, dou
                 if (f_values[i] > f_values[i_max]) i_max = i;
             }
 
-            // centroid z pominięciem najgorszego punktu
             matrix p_centroid(n, 1, 0.0);
             for (int i = 0; i <= n; ++i) {
                 if (i == i_max) continue;
                 p_centroid = p_centroid + p[i];
             }
             p_centroid = p_centroid * (1.0 / double(n));
-
-            // odbicie (reflection)
             matrix p_odb = p_centroid + (p_centroid - p[i_max]) * alpha;
             double f_odb = ff(p_odb, ud1, ud2)(0, 0);
             ++f_calls;
-
-            // ekspansja (jeśli odbicie lepsze niż najlepszy)
             if (f_odb < f_values[i_min]) {
-                matrix p_e = p_centroid + (p_odb - p_centroid) * gamma; // expansion
+                matrix p_e = p_centroid + (p_odb - p_centroid) * gamma;
                 double f_e = ff(p_e, ud1, ud2)(0, 0);
                 ++f_calls;
 
@@ -583,42 +574,33 @@ solution sym_NM(std::function<matrix(matrix, matrix, matrix)> ff, matrix x0, dou
                 }
             }
             else {
-                // jeśli odbicie poprawiło względem najgorszego, zastąp
                 if (f_odb < f_values[i_max]) {
                     p[i_max] = p_odb;
                     f_values[i_max] = f_odb;
                 } else {
-                    // kontrakcja
                     matrix p_z = p_centroid + (p[i_max] - p_centroid) * beta; // contraction
                     double f_z = ff(p_z, ud1, ud2)(0, 0);
                     ++f_calls;
 
                     if (f_z >= f_values[i_max]) {
-                        // shrink: przybliż wszystkie punkty do najlepszego
                         for (int i = 0; i <= n; ++i) {
                             if (i == i_min) continue;
-                            // poprawna formuła shrink: x_i = x_min + delta*(x_i - x_min)
                             p[i] = p[i_min] + (p[i] - p[i_min]) * delta;
                             f_values[i] = ff(p[i], ud1, ud2)(0, 0);
                             ++f_calls;
                         }
                     } else {
-                        // zaakceptuj kontrakcję
                         p[i_max] = p_z;
                         f_values[i_max] = f_z;
                     }
                 }
             }
-
-            // sprawdź limit wywołań
             if (f_calls >= Nmax) {
                 Xopt.x = p[i_min];
                 Xopt.y = matrix(f_values[i_min]);
                 Xopt.f_calls = f_calls;
                 throw std::string("Przekroczono maksymalna liczbe wywołań funkcji (Nmax) w metodzie Neldera-Meada.");
             }
-
-            // kryterium zbieżności: odległości od najlepszego punktu
             bool converged = true;
             for (int i = 0; i <= n; ++i) {
                 if (norm_NM(p[i_min] - p[i]) >= epsilon) {
@@ -652,15 +634,13 @@ solution pen(std::function<matrix(matrix, matrix, matrix)> ff, matrix x0, double
 
         int total_calls = 0;
         
-        double s = 0.5;      // Długość boku początkowego
+        double s = 0.5;
         double alpha = 1.0;
         double beta = 0.5;  
         double gamma = 2.0;
         double delta = 0.5; 
 
-        // Pętla zewnętrzna metody funkcji kary
         do {
-            // 1. Zapisujemy aktualne c do kontenera
             c_container(0, 0) = c;
 
             solution inner_sol = sym_NM(ff, x_curr, s, alpha, beta, gamma, delta, epsilon, Nmax - total_calls, ud1, c_container);
@@ -668,7 +648,7 @@ solution pen(std::function<matrix(matrix, matrix, matrix)> ff, matrix x0, double
             x_prev = x_curr;
             x_curr = inner_sol.x;
             total_calls += inner_sol.f_calls;
-                        Xopt = inner_sol;
+            Xopt = inner_sol;
             Xopt.f_calls = total_calls;
             c = dc * c;
             if (total_calls >= Nmax) {
