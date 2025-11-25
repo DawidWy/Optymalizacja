@@ -523,14 +523,13 @@ solution sym_NM(std::function<matrix(matrix, matrix, matrix)> ff, matrix x0, dou
     try
     {
         solution Xopt;
-        pair<int,int> size = get_size(x0);
-		int n = size.first;
+		int n = get_len(x0);
         std::vector<matrix> p;
         p.reserve(n + 1);
         p.push_back(x0);
         for (int i = 0; i < n; ++i) {
-            matrix ei(n, 1, 0.0);
-            ei(i, 0) = 1.0;
+            matrix ei(n,1, 0.0);
+            ei(i) = 1.0;
             p.push_back(x0 + ei * s);
         }
 

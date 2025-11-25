@@ -2,10 +2,12 @@
 #include <cstdlib>
 #include <ostream>
 #define _USE_MATH_DEFINES
-#include <math.h>
 #include <cmath>
+#include <math.h>
+
 
 #include"user_funs.h"
+#include "utils.h"
 #include <algorithm>
 
 
@@ -222,13 +224,13 @@ matrix ff3T_inside(matrix x, matrix ud1, matrix ud2)
 }
 
 matrix lab3dY(double t, matrix Y, matrix ud1, matrix ud2) {
-    matrix dY(4,1);
+    matrix dY(5,1);
     const double m = 0.6; // masa w kilogramach
     const double r = 0.12; //promień w metrach
 
     const double vx = Y(2); //początkowa prędkość w kierunku x
     const double vy = Y(3); //początkowa prędkość w kierunku y
-    const double omega = m2d(ud1); //początkowa rotacja w rad/s
+    const double omega = Y(4); //początkowa rotacja w rad/s
 
     // Konstansy użyte w obliczeniach
     const double C = 0.47;
@@ -244,20 +246,22 @@ matrix lab3dY(double t, matrix Y, matrix ud1, matrix ud2) {
     dY(1) = vy; //dy/dt
     dY(2) =-(Dx+Fmx)/m; //dvx/dt
     dY(3) =-(Dy+Fmy)/m-g; //dvy/dt
+    dY(4) = 0;
 
     return dY;
 }
 
-matrix ff3R(matrix x, matrix ud1) {
+matrix ff3R(matrix x, matrix ud1,matrix ud2) {
     
-    //x to vx początkowe, ud1 to omega
-    matrix Y(4,1);
+    //x0 to vx początkowe, x1 to omega
+    matrix Y(5,1);
     Y(0) = 0; //wstępne przesunięcie w metrach
     Y(1) = 100; //wstępna wysokość w metrach
-    Y(2) = m2d(x);
+    Y(2) = x(0);
     Y(3) = 0;
+    Y(4) = x(1);
 
-    pair<matrix,matrix> sol = solve_ode(lab3dY, 0, 0.01, 7, Y, ud1);
+    pair<matrix,matrix> sol = solve_ode(lab3dY, 0, 0.01, 7, Y);
     
     int i;
     double x_end;

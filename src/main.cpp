@@ -257,6 +257,15 @@ void lab3() {
 	}
 	Sout << test_ss.str();
 	Sout.close();
+
+	matrix v0x_omega = rand_range({-10,-10},{10,10});
+	
+	std::cout << "Initial V_x: " << v0x_omega(0) << std::endl << "Initial omega: " << v0x_omega(1) << std::endl;
+	solution sol = pen(ff3R, v0x_omega,c_inside,dc_inside,epsilon,Nmax);
+	std::cout << sol << std::endl;
+
+	
+	
 }
 
 void lab4()
