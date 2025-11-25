@@ -212,6 +212,7 @@ void lab2()
 }
 
 void lab3() {
+	srand(time(NULL));
 	double epsilon = 1E-3;
 	int Nmax = 10000;
 	double c_inside = 100;
