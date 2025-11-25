@@ -1,3 +1,6 @@
+#include "matrix.h"
+#include <cstdlib>
+#include <ostream>
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <cmath>
@@ -216,4 +219,104 @@ matrix ff3T_inside(matrix x, matrix ud1, matrix ud2)
     barrier += -1.0 / g3;
 
     return matrix(y + c * barrier);
+}
+
+matrix lab3dY(double t, matrix Y, matrix ud1, matrix ud2) {
+    matrix dY(4,1);
+    const double m = 0.6; // masa w kilogramach
+    const double r = 0.12; //promień w metrach
+
+    const double vx = Y(2); //początkowa prędkość w kierunku x
+    const double vy = Y(3); //początkowa prędkość w kierunku y
+    const double omega = m2d(ud1); //początkowa rotacja w rad/s
+
+    // Konstansy użyte w obliczeniach
+    const double C = 0.47;
+    const double S = M_PI * r * r;
+    const double rho = 1.2;
+
+    const double Dx = C*rho*S*vx*abs(vx)/2;
+    const double Dy = C*rho*S*vy*abs(vy)/2;
+
+    const double Fmx = rho*vy*omega*M_PI*r*r*r;
+    const double Fmy = rho*vx*omega*M_PI*r*r*r;
+    dY(0) = vx; //dx/dt
+    dY(1) = vy; //dy/dt
+    dY(2) =-(Dx+Fmx)/m; //dvx/dt
+    dY(3) =-(Dy+Fmy)/m-g; //dvy/dt
+
+    return dY;
+}
+
+matrix ff3R(matrix x, matrix ud1) {
+    
+    //x to vx początkowe, ud1 to omega
+    matrix Y(4,1);
+    Y(0) = 0; //wstępne przesunięcie w metrach
+    Y(1) = 100; //wstępna wysokość w metrach
+    Y(2) = m2d(x);
+    Y(3) = 0;
+
+    pair<matrix,matrix> sol = solve_ode(lab3dY, 0, 0.01, 7, Y, ud1);
+    
+    int i;
+    double x_end;
+    double t_end;
+    double penalty = 0;
+
+    double y_prev;
+    double y_curr;
+    double x_prev;
+    double x_curr;
+    double t_prev;
+    double t_curr;
+    double alpha;
+
+    int n = get_len(sol.second[1]);
+
+    //Szukamy momentu zderzenia z ziemią
+    if (sol.second(n-1,1)<0) {
+        for (i=0;sol.second(i,1)>0; i++);
+
+        //interpolacja liniowa
+        y_prev = sol.second(i-1,1);
+        y_curr = sol.second(i,1);
+        x_prev = sol.second(i-1,0);
+        x_curr = sol.second(i,0);
+        t_prev = sol.first(i-1,0);
+        t_curr = sol.first(i,0);
+
+        alpha = -y_prev / (y_curr - y_prev);
+        x_end = x_prev + alpha * (x_curr - x_prev);
+        t_end = t_prev + alpha * (t_curr - t_prev);
+    }
+    else { //jeśli go nie ma, zwracamy najniższy punkt
+        x_end = sol.second(n-1,0);
+        t_end = sol.first(n-1,0);
+    }
+
+    // Jeśli piłka nigdy nie minęła y=50, coś poszło nie tak, duże penalty
+    if(sol.second(n-1,1)>50) {
+        penalty += 5000;
+        return -x_end + penalty;
+    }
+
+    //Szukamy momentu przecięcia y=50
+    for (i=0;sol.second(i,1)>50; i++);
+    y_prev = sol.second(i-1,1);
+    y_curr = sol.second(i,1);
+    x_prev = sol.second(i-1,0);
+    x_curr = sol.second(i,0);
+    alpha = (50 - y_prev) / (y_curr - y_prev);
+    double x_50 = x_prev + alpha * (x_curr - x_prev);
+    
+    if(x_50 < 3) {
+        penalty += 1000 * (3 - x_50)*(3 - x_50);
+    }
+
+    if(x_50 > 7) {
+        penalty += 1000 * (7 - x_50)*(7 - x_50);
+    }
+    
+    return -x_end + penalty;
 }
