@@ -222,7 +222,7 @@ void lab3() {
           "in;y_in;f_calls_in\n";
   std::random_device rd;
   std::mt19937 gen(rd());
-  std::uniform_real_distribution<> x0_dist(1.5, 5.5);
+  std::uniform_real_distribution<> x0_dist(1, 2);
   std::stringstream test_ss;
   solution test_sol;
   matrix a = matrix(4.0);
