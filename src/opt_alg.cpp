@@ -1,5 +1,7 @@
 #include"opt_alg.h"
+#include "solution.h"
 #include <algorithm>
+#include <cmath>
 #include <stdexcept>
 #include <system_error>
 #include<vector>
@@ -716,9 +718,32 @@ solution golden(std::function<matrix(matrix,matrix,matrix)> ff, double a, double
 	try
 	{
 		solution Xopt;
-		//Tu wpisz kod funkcji
+		int i = 0;
+        const double alpha = (sqrt(5)-1.)/2.;
+        double ca = a;
+        double cb = b;
+        double cc = cb - alpha*(cb-ca);
+        double cd = ca + alpha*(cb-ca);
+        while ((cb - ca) < epsilon) {
+            if (ff(cc,ud1,ud2) < ff(cd,ud1,ud2)) {
+                //ca=ca;
+                cb=cd;
+                cd = cc;
+                cc = cb - alpha*(cb - ca);
+            }
+            else{
+                ca = cc;
+                //cb = cb;
+                cc = cd;
+                cd = ca + alpha*(cb-ca);
+            }
+            solution::f_calls++;
+            if (solution::f_calls>Nmax) throw std::string("Przekroczono Nmax w metodzie złotego podziału (golden).");
+        }
+        Xopt.x=(ca+cb)/2.;
+        Xopt.y = ff(Xopt.x,ud1,ud2);
 
-		return Xopt;
+        return Xopt;
 	}
 	catch (string ex_info)
 	{
