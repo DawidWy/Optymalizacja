@@ -265,7 +265,7 @@ void lab4()
 	std::mt19937 gen(rd());
 	std::uniform_real_distribution<> x0_dist;
 	for (int i=0;i<=100;i++){
-		x0_dist = std::uniform_real_distribution<>(-2,2)
+		x0_dist = std::uniform_real_distribution<>(-2,2);
 	}
 }
 
