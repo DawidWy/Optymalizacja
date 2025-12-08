@@ -28,7 +28,7 @@ int main()
 {
 	try
 	{
-		lab3();
+		lab4();
 	}
 	catch (string EX_INFO)
 	{
@@ -258,8 +258,10 @@ void lab3() {
   Sout.close();
 }
 
+matrix test(matrix a, matrix b, matrix c){return a*a+3*a-2;};
 void lab4()
 {
+	std::cout << golden(test, -3, 1, 0.0001, 100000);
 }
 
 void lab5()
