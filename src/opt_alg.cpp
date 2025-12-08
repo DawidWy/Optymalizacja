@@ -4,6 +4,7 @@
 #include <cmath>
 #include <stdexcept>
 #include <system_error>
+#include <string>
 #include<vector>
 #include<utility>
 
@@ -667,51 +668,110 @@ solution pen(std::function<matrix(matrix, matrix, matrix)> ff, matrix x0, double
     }
 }
 
-solution SD(std::function<matrix(matrix,matrix,matrix)> ff, matrix(*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
+solution SD(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
-	try
-	{
-		solution Xopt;
-		//Tu wpisz kod funkcji
-
-		return Xopt;
-	}
-	catch (string ex_info)
-	{
-		throw ("solution SD(...):\n" + ex_info);
-	}
+    try
+    {
+        solution Xopt;
+        solution::clear_calls();
+        matrix x = x0;
+        matrix x_old;
+        double h = h0;
+        do
+        {
+            x_old = x;
+            matrix d = -gf(x, ud1, ud2);
+            Xopt.g_calls++;
+            //tutaj h
+            x = x + h * d;
+            if(solution::g_calls > Nmax || solution::H_calls > Nmax || solution::f_calls > Nmax){
+                throw std::string("Przekroczono Nmax w metodzie Newtona.");
+            }
+        } while (norm(x - x_old) > epsilon);
+        Xopt.x = x;
+        Xopt.y = ff(x, ud1, ud2);
+        Xopt.f_calls++;
+        return Xopt;
+    }
+    catch (string ex_info)
+    {
+        throw("solution SD(...):\n" + ex_info);
+    }
 }
 
-solution CG(std::function<matrix(matrix,matrix,matrix)> ff, matrix(*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
+solution CG(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
-	try
-	{
-		solution Xopt;
-		//Tu wpisz kod funkcji
-
-		return Xopt;
-	}
-	catch (string ex_info)
-	{
-		throw ("solution CG(...):\n" + ex_info);
-	}
+    try
+    {
+        solution Xopt;
+        solution::clear_calls();
+        int n = get_len(x0);
+        matrix x = x0;
+        matrix g1 = gf(x, ud1, ud2);
+        Xopt.g_calls++;
+        matrix d = -g1;
+        matrix x_old;
+        double h = h0;
+        do
+        {
+            x_old = x;
+            matrix x1 = x + h * d;
+            //tutaj obliczanie h
+            matrix g_old = g1;
+            g1 = gf(x, ud1, ud2);
+            Xopt.g_calls++;
+            double beta = pow(norm(g1), 2) / pow(norm(g_old), 2);
+            d = -g1 + beta * d;
+            if(solution::g_calls > Nmax || solution::H_calls > Nmax || solution::f_calls > Nmax){
+                throw std::string("Przekroczono Nmax w metodzie Newtona.");
+            }
+        } while (norm(x - x_old) > epsilon);
+        Xopt.x = x;
+        Xopt.y = ff(x, ud1, ud2);
+        Xopt.f_calls++;
+        return Xopt;
+    }
+    catch (string ex_info)
+    {
+        throw("solution CG(...):\n" + ex_info);
+    }
 }
 
-solution Newton(std::function<matrix(matrix,matrix,matrix)> ff, matrix(*gf)(matrix, matrix, matrix),
-	matrix(*Hf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
+solution Newton(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(matrix, matrix, matrix),
+                matrix (*Hf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
-	try
-	{
-		solution Xopt;
-		//Tu wpisz kod funkcji
-
-		return Xopt;
-	}
-	catch (string ex_info)
-	{
-		throw ("solution Newton(...):\n" + ex_info);
-	}
+    try
+    {
+        solution Xopt;
+        solution::clear_calls();
+        matrix x = x0;
+        matrix x_old;
+        double h = h0;
+        do
+        {
+            x_old = x;
+            matrix g = gf(x, ud1, ud2);
+            Xopt.g_calls++;
+            matrix H = Hf(x, ud1, ud2);
+            Xopt.H_calls++;
+            matrix d = inv(H) * -g;
+            //tutaj obliczanie h
+            x = x + h * d;
+            if(solution::g_calls > Nmax || solution::H_calls > Nmax || solution::f_calls > Nmax){
+                throw std::string("Przekroczono Nmax w metodzie Newtona.");
+            }
+        } while (norm(x - x_old) > epsilon );
+        Xopt.x = x;
+        Xopt.y = ff(x, ud1, ud2);
+        Xopt.f_calls++;
+        return Xopt;
+    }
+    catch (string ex_info)
+    {
+        throw("solution Newton(...):\n" + ex_info);
+    }
 }
+
 
 solution golden(std::function<matrix(matrix,matrix,matrix)> ff, double a, double b, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
@@ -778,69 +838,6 @@ solution EA(std::function<matrix(matrix,matrix,matrix)> ff, int N, matrix lb, ma
 	catch (string ex_info)
 	{
 		throw ("solution EA(...):\n" + ex_info);
-	}
-}
-
-
-
-solution SD(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
-{
-	try
-	{
-		solution Xopt;
-		//Tu wpisz kod funkcji
-
-		return Xopt;
-	}
-	catch (string ex_info)
-	{
-		throw ("solution SD(...):\n" + ex_info);
-	}
-}
-
-solution CG(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
-{
-	try
-	{
-		solution Xopt;
-		//Tu wpisz kod funkcji
-
-		return Xopt;
-	}
-	catch (string ex_info)
-	{
-		throw ("solution CG(...):\n" + ex_info);
-	}
-}
-
-solution Newton(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, matrix),
-	matrix(*Hf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
-{
-	try
-	{
-		solution Xopt;
-		//Tu wpisz kod funkcji
-
-		return Xopt;
-	}
-	catch (string ex_info)
-	{
-		throw ("solution Newton(...):\n" + ex_info);
-	}
-}
-
-solution golden(matrix(*ff)(matrix, matrix, matrix), double a, double b, double epsilon, int Nmax, matrix ud1, matrix ud2)
-{
-	try
-	{
-		solution Xopt;
-		//Tu wpisz kod funkcji
-
-		return Xopt;
-	}
-	catch (string ex_info)
-	{
-		throw ("solution golden(...):\n" + ex_info);
 	}
 }
 
