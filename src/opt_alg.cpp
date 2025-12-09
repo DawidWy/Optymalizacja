@@ -713,7 +713,12 @@ solution SD(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(matri
             }
             x = x + h * d;
             if(solution::g_calls > Nmax || solution::H_calls > Nmax || solution::f_calls > Nmax){
-                throw std::string("Przekroczono Nmax w metodzie Newtona.");
+                Xopt.x = x;
+                Xopt.y = ff(x, ud1, ud2);
+                Xopt.f_calls++;
+                return Xopt;
+            }
+                //throw std::string("Przekroczono Nmax w metodzie Newtona.");
             }
         } while (norm(x - x_old) > epsilon);
         Xopt.x = x;
@@ -753,7 +758,12 @@ solution CG(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(matri
             double beta = pow(norm(g1), 2) / pow(norm(g_old), 2);
             d = -g1 + beta * d;
             if(solution::g_calls > Nmax || solution::H_calls > Nmax || solution::f_calls > Nmax){
-                throw std::string("Przekroczono Nmax w metodzie Newtona.");
+                Xopt.x = x;
+                Xopt.y = ff(x, ud1, ud2);
+                Xopt.f_calls++;
+                return Xopt;
+            }
+                //throw std::string("Przekroczono Nmax w metodzie Newtona.");
             }
         } while (norm(x - x_old) > epsilon);
         Xopt.x = x;
@@ -790,7 +800,11 @@ solution Newton(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(m
             }
             x = x + h * d;
             if(solution::g_calls > Nmax || solution::H_calls > Nmax || solution::f_calls > Nmax){
-                throw std::string("Przekroczono Nmax w metodzie Newtona.");
+                Xopt.x = x;
+                Xopt.y = ff(x, ud1, ud2);
+                Xopt.f_calls++;
+                return Xopt;
+                //throw std::string("Przekroczono Nmax w metodzie Newtona.");
             }
         } while (norm(x - x_old) > epsilon );
         Xopt.x = x;
