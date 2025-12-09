@@ -673,9 +673,11 @@ solution SD(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(matri
     try
     {
         solution Xopt;
+        Xopt.y = NAN;
         solution::clear_calls();
         matrix x = x0;
         matrix x_old;
+        matrix old_fx = NAN;
         double h = h0;
         do
         {
@@ -687,10 +689,10 @@ solution SD(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(matri
             if(solution::g_calls > Nmax || solution::H_calls > Nmax || solution::f_calls > Nmax){
                 throw std::string("Przekroczono Nmax w metodzie Newtona.");
             }
-        } while (norm(x - x_old) > epsilon);
-        Xopt.x = x;
-        Xopt.y = ff(x, ud1, ud2);
-        Xopt.f_calls++;
+            old_fx = Xopt.y;
+            Xopt.x = x;
+            Xopt.fit_fun(ff, ud1, ud2);
+        } while (old_fx == NAN || norm(Xopt.y - old_fx) > epsilon );
         return Xopt;
     }
     catch (string ex_info)
@@ -704,6 +706,7 @@ solution CG(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(matri
     try
     {
         solution Xopt;
+        Xopt.y = NAN;
         solution::clear_calls();
         int n = get_len(x0);
         matrix x = x0;
@@ -711,6 +714,7 @@ solution CG(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(matri
         Xopt.g_calls++;
         matrix d = -g1;
         matrix x_old;
+        matrix old_fx = NAN;
         double h = h0;
         do
         {
@@ -725,10 +729,10 @@ solution CG(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(matri
             if(solution::g_calls > Nmax || solution::H_calls > Nmax || solution::f_calls > Nmax){
                 throw std::string("Przekroczono Nmax w metodzie Newtona.");
             }
-        } while (norm(x - x_old) > epsilon);
-        Xopt.x = x;
-        Xopt.y = ff(x, ud1, ud2);
-        Xopt.f_calls++;
+            old_fx = Xopt.y;
+            Xopt.x = x;
+            Xopt.fit_fun(ff, ud1, ud2);
+        } while (old_fx == NAN || norm(Xopt.y - old_fx) > epsilon );
         return Xopt;
     }
     catch (string ex_info)
@@ -747,6 +751,8 @@ solution Newton(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(m
         matrix x = x0;
         matrix x_old;
         double h = h0;
+        Xopt.y = NAN;
+        matrix old_fx = NAN;
         do
         {
             x_old = x;
@@ -760,10 +766,10 @@ solution Newton(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(m
             if(solution::g_calls > Nmax || solution::H_calls > Nmax || solution::f_calls > Nmax){
                 throw std::string("Przekroczono Nmax w metodzie Newtona.");
             }
-        } while (norm(x - x_old) > epsilon );
-        Xopt.x = x;
-        Xopt.y = ff(x, ud1, ud2);
-        Xopt.f_calls++;
+            old_fx = Xopt.y;
+            Xopt.x = x;
+            Xopt.fit_fun(ff, ud1, ud2);
+        } while (old_fx == NAN || norm(Xopt.y - old_fx) > epsilon );
         return Xopt;
     }
     catch (string ex_info)

@@ -8,6 +8,7 @@
 #include"user_funs.h"
 #include <algorithm>
 
+#define M_PI 3.14159265358979323846
 
 matrix ff0T(matrix x, matrix ud1, matrix ud2)				// funkcja celu dla przypadku testowego
 {
