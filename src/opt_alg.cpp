@@ -674,6 +674,7 @@ matrix line_function(matrix alpha_mat, matrix x0, matrix d,
   // alpha_mat to macierz 1x1 zawierająca wartość alpha, czyli długości kroku, to jest to co będzie optymalizowane
   double alpha = alpha_mat(0);
   matrix x_new = x0 + alpha * d;
+  solution::f_calls++;
   return ff(x_new, ud1, ud2);
 }
 double find_step_length(matrix x0, matrix direction,
