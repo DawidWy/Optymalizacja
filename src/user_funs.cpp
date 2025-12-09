@@ -337,3 +337,14 @@ matrix gf4T(matrix x, matrix ud1, matrix ud2)
 	g(1) = 2.0 * x2 + x1;
 	return g;
 }
+matrix hf4T(matrix x, matrix ud1, matrix ud2)
+{
+	matrix H(2, 2);
+	double x1 = x(0);
+	double x2 = x(1);
+	H(0, 0) = 5.0 * pow(x1, 4) - 12.6 * pow(x1, 2) + 4.0;
+	H(0, 1) = 1.0;
+	H(1, 0) = 1.0;
+	H(1, 1) = 2.0;
+	return H;
+}

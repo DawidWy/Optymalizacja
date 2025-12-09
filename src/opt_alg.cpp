@@ -668,6 +668,31 @@ solution pen(std::function<matrix(matrix, matrix, matrix)> ff, matrix x0, double
     }
 }
 
+matrix line_function(matrix alpha_mat, matrix x0, matrix d,
+                     std::function<matrix(matrix, matrix, matrix)> ff,
+                     matrix ud1, matrix ud2) {
+  // alpha_mat to macierz 1x1 zawierająca wartość alpha, czyli długości kroku, to jest to co będzie optymalizowane
+  double alpha = alpha_mat(0);
+  matrix x_new = x0 + alpha * d;
+  return ff(x_new, ud1, ud2);
+}
+double find_step_length(matrix x0, matrix direction,
+                        std::function<matrix(matrix, matrix, matrix)> ff,
+                        matrix ud1, matrix ud2, double a = 0.0, double b = 1.0,
+                        double epsilon = 1e-6, int Nmax = 100000) {
+
+  // Tworzymy funkcję lambda dla metody złotego podziału (to tylko po to aby dodatkowe argumenty spakować aby to pasowało do goldena)
+  auto line_func = [x0, direction, ff, ud1, ud2](matrix alpha_mat, matrix,
+                                                 matrix) -> matrix {
+    return line_function(alpha_mat, x0, direction, ff, ud1, ud2);
+  };
+
+  // Znajdujemy optymalny krok za pomocą metody złotego podziału
+  solution step = golden(line_func, a, b, epsilon, Nmax, matrix(), matrix());
+
+  return m2d(step.x); // optymalna długość kroku
+}
+
 solution SD(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
     try
@@ -682,7 +707,9 @@ solution SD(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(matri
             x_old = x;
             matrix d = -gf(x, ud1, ud2);
             Xopt.g_calls++;
-            //tutaj h
+            if(h == 0){
+                h = find_step_length(x, d, ff, ud1, ud2, 0.0, 1.0, epsilon, Nmax);
+            }
             x = x + h * d;
             if(solution::g_calls > Nmax || solution::H_calls > Nmax || solution::f_calls > Nmax){
                 throw std::string("Przekroczono Nmax w metodzie Newtona.");
@@ -716,7 +743,9 @@ solution CG(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(matri
         {
             x_old = x;
             matrix x1 = x + h * d;
-            //tutaj obliczanie h
+            if(h == 0){
+                h = find_step_length(x, d, ff, ud1, ud2, 0.0, 1.0, epsilon, Nmax);
+            }
             matrix g_old = g1;
             g1 = gf(x, ud1, ud2);
             Xopt.g_calls++;
@@ -755,7 +784,9 @@ solution Newton(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(m
             matrix H = Hf(x, ud1, ud2);
             Xopt.H_calls++;
             matrix d = inv(H) * -g;
-            //tutaj obliczanie h
+            if(h == 0){
+                h = find_step_length(x, d, ff, ud1, ud2, 0.0, 1.0, epsilon, Nmax);
+            }
             x = x + h * d;
             if(solution::g_calls > Nmax || solution::H_calls > Nmax || solution::f_calls > Nmax){
                 throw std::string("Przekroczono Nmax w metodzie Newtona.");
@@ -784,18 +815,27 @@ solution golden(std::function<matrix(matrix,matrix,matrix)> ff, double a, double
         double cb = b;
         double cc = cb - alpha*(cb-ca);
         double cd = ca + alpha*(cb-ca);
-        while ((cb - ca) < epsilon) {
-            if (ff(cc,ud1,ud2) < ff(cd,ud1,ud2)) {
+
+        double fc = m2d(ff(cc, ud1, ud2));
+        double fd = m2d(ff(cd, ud1, ud2));
+        solution::f_calls += 2;
+
+        while ((cb - ca) > epsilon) {
+            if (fc < fd) {
                 //ca=ca;
-                cb=cd;
+                cb = cd;
                 cd = cc;
+                fd = fc;
                 cc = cb - alpha*(cb - ca);
+                fc = m2d(ff(cc, ud1, ud2));
             }
             else{
                 ca = cc;
                 //cb = cb;
                 cc = cd;
+                fc = fd;
                 cd = ca + alpha*(cb-ca);
+                fd = m2d(ff(cd,ud1,ud2));
             }
             solution::f_calls++;
             if (solution::f_calls>Nmax) throw std::string("Przekroczono Nmax w metodzie złotego podziału (golden).");
@@ -827,36 +867,6 @@ solution Powell(std::function<matrix(matrix,matrix,matrix)> ff, matrix x0, doubl
 }
 
 solution EA(std::function<matrix(matrix,matrix,matrix)> ff, int N, matrix lb, matrix ub, int mi, int lambda, matrix sigma0, double epsilon, int Nmax, matrix ud1, matrix ud2)
-{
-	try
-	{
-		solution Xopt;
-		//Tu wpisz kod funkcji
-
-		return Xopt;
-	}
-	catch (string ex_info)
-	{
-		throw ("solution EA(...):\n" + ex_info);
-	}
-}
-
-solution Powell(matrix(*ff)(matrix, matrix, matrix), matrix x0, double epsilon, int Nmax, matrix ud1, matrix ud2)
-{
-	try
-	{
-		solution Xopt;
-		//Tu wpisz kod funkcji
-
-		return Xopt;
-	}
-	catch (string ex_info)
-	{
-		throw ("solution Powell(...):\n" + ex_info);
-	}
-}
-
-solution EA(matrix(*ff)(matrix, matrix, matrix), int N, matrix lb, matrix ub, int mi, int lambda, matrix sigma0, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
 	try
 	{
