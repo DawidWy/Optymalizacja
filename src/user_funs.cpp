@@ -165,26 +165,25 @@ matrix ff2R(matrix x, matrix ud1, matrix ud2) {
 
 matrix ff3T_outside(matrix x, matrix ud1, matrix ud2)
 {
-    double x0 = x(0); // x1 w zapisie matematycznym
-    double x1 = x(1); // x2 w zapisie matematycznym
+    double x0 = x(0); 
+    double x1 = x(1);
     double a = ud1(0);
     double c = ud2(0);
 
-    // 1. Obliczenie funkcji celu (taka sama jak poprzednio)
     double term = sqrt(pow(x0 / M_PI, 2) + pow(x1 / M_PI, 2));
-    double y = 0;
-    if (abs(term) < 1e-10) y = M_PI;
-    else y = sin(M_PI * term) / term;
+    
+    double denominator = M_PI * term;
 
-    // 2. Definicja ograniczeń g(x) <= 0
+    double y = 0;
+    if (abs(denominator) < 1e-10) y = 1.0;
+    else y = sin(M_PI * term) / denominator;
+
     double g1 = -x0 + 1.0;
     double g2 = -x1 + 1.0;
     double g3 = sqrt(pow(x0, 2) + pow(x1, 2)) - a;
 
     double penalty = 0.0;
 
-    // 3. Sprawdzanie naruszeń i dodawanie kary
-    // Jeśli g > 0, dodajemy c * g^2
     if (g1 > 0) penalty += c * pow(g1, 2);
     if (g2 > 0) penalty += c * pow(g2, 2);
     if (g3 > 0) penalty += c * pow(g3, 2);
@@ -208,9 +207,11 @@ matrix ff3T_inside(matrix x, matrix ud1, matrix ud2)
     }
 
     double term = sqrt(pow(x0 / M_PI, 2) + pow(x1 / M_PI, 2));
+    double denominator = M_PI * term;
+    
     double y = 0;
-    if (abs(term) < 1e-10) y = M_PI;
-    else y = sin(M_PI * term) / term;
+    if (abs(denominator) < 1e-10) y = 1.0;
+    else y = sin(M_PI * term) / denominator;
 
     double barrier = 0.0;
     barrier += -1.0 / g1;
@@ -319,10 +320,17 @@ matrix ff3R(matrix x, matrix ud1) {
     
     return -x_end + penalty;
 }
+matrix ff4T(matrix x, matrix ud1, matrix ud2){
+    double x1 = x(0);
+	double x2 = x(1);
+	matrix result = 1/6 * pow(x1, 6) - 1.05 * pow(x1, 4) + 2 * pow(x1, 2) + pow(x2, 2) + x1*x2;
+	return result;
+}
 
 double sigmoid(double z) {
     return 1.0 / (1.0 + exp(-z));
 }
+
 matrix hf4R(matrix theta, matrix X, matrix Y) {
     try {
         auto x_size = get_size(X);
