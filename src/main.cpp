@@ -13,6 +13,7 @@ Data ostatniej modyfikacji: 30.09.2025
 #include "solution.h"
 #include "csv.h"
 #include "utils.h"
+#include "ode_solver.h"
 #include <cmath>
 #include <cstdlib>
 #include <random>
@@ -29,7 +30,7 @@ int main()
 {
 	try
 	{
-		lab3();
+		lab4();
 	}
 	catch (string EX_INFO)
 	{
@@ -257,6 +258,68 @@ void lab3() {
 	}
 	Sout << test_ss.str();
 	Sout.close();
+}
+
+void load_data(const string& x_filename, const string& y_filename, 
+               matrix& X, matrix& Y) {
+    // Wczytywanie danych X (3 cechy x 100 przykładów)
+    ifstream x_file(x_filename);
+    if (!x_file.is_open()) {
+        throw string("Nie można otworzyć pliku " + x_filename);
+    }
+    
+    int n = 3;    // liczba cech + bias term
+    int m = 100;  // liczba przykładów
+    
+    X = matrix(n, m);
+    
+    // Wczytujemy 3 wiersze z pliku XData.txt
+    for (int i = 0; i < n; i++) {
+        string line;
+        getline(x_file, line);  // wczytaj cały wiersz
+        
+        // Podziel linię na wartości oddzielone średnikami
+        stringstream ss(line);
+        string value;
+        
+        for (int j = 0; j < m; j++) {
+            getline(ss, value, ';');
+            // Usuń spacje z początku i końca
+            value.erase(0, value.find_first_not_of(" \t"));
+            value.erase(value.find_last_not_of(" \t") + 1);
+            
+            // Konwertuj na double i zapisz
+            X(i, j) = stod(value);
+        }
+    }
+    x_file.close();
+    
+    // Wczytywanie danych Y (etykiety 0/1)
+    ifstream y_file(y_filename);
+    if (!y_file.is_open()) {
+        throw string("Nie można otworzyć pliku " + y_filename);
+    }
+    
+    Y = matrix(1, m);
+    
+    // Wczytujemy 1 wiersz z pliku YData.txt
+    string line;
+    getline(y_file, line);
+    
+    // Podziel linię na wartości oddzielone średnikami
+    stringstream ss(line);
+    string value;
+    
+    for (int j = 0; j < m; j++) {
+        getline(ss, value, ';');
+        // Usuń spacje z początku i końca
+        value.erase(0, value.find_first_not_of(" \t"));
+        value.erase(value.find_last_not_of(" \t") + 1);
+        
+        // Konwertuj na double i zapisz
+        Y(0, j) = stod(value);
+    }
+    y_file.close();
 }
 
 void lab4()

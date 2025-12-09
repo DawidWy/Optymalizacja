@@ -27,7 +27,7 @@ OBJS       = $(patsubst %.cpp, $(OUT_DIR)/%.o,   $(SRCS))
 
 # Domyślny cel
 all: $(TARGET)
-	@$(MAKE) clean	
+
 # Budowanie programu
 $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) -I$(INC_DIR) -o bin/$(TARGET) $(OBJS)

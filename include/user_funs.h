@@ -17,3 +17,5 @@ matrix ff3T_outside(matrix x, matrix ud1, matrix ud2);
 matrix ff3T_inside(matrix x, matrix ud1, matrix ud2);
 matrix ff3R(matrix x, matrix ud1);
 matrix ff4T(matrix x, matrix ud1, matrix ud2);
+matrix gf4R(matrix theta, matrix X, matrix Y);
+matrix hf4R(matrix theta, matrix X, matrix Y);
