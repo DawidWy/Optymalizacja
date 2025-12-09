@@ -319,3 +319,82 @@ matrix ff3R(matrix x, matrix ud1) {
     
     return -x_end + penalty;
 }
+// Funkcja hipotezy i kosztu
+matrix hf4R(matrix theta, matrix X, matrix Y) {
+    try {
+        auto x_size = get_size(X);
+        int m = x_size.second;  // liczba przykładów (100)
+        int n = x_size.first;   // liczba cech (3)
+        
+        // Obliczanie hipotezy dla każdego przykładu: h = sigmoid(theta^T * x)
+        // theta: 3x1, X: 3x100, theta^T * X: 1x100
+        matrix z = trans(theta) * X;
+        matrix h(1, m);
+        
+        for (int i = 0; i < m; i++) {
+            double z_val = z(0, i);
+            h(0, i) = 1.0 / (1.0 + exp(-z_val));
+        }
+        
+        // Obliczanie funkcji kosztu J(theta)
+        matrix cost(1, 1);
+        double J = 0.0;
+        
+        for (int i = 0; i < m; i++) {
+            double h_i = h(0, i);
+            double y_i = Y(0, i);
+            
+            // Używamy małej stałej epsilon, aby uniknąć log(0)
+            double epsilon = 1e-15;
+            if (h_i < epsilon) h_i = epsilon;
+            if (h_i > 1 - epsilon) h_i = 1 - epsilon;
+            
+            J += y_i * log(h_i) + (1 - y_i) * log(1 - h_i);
+        }
+        
+        J = -J / m;
+        cost(0) = J;
+        
+        return cost;
+    }
+    catch (string ex_info) {
+        throw ("matrix hf4R(...):\n" + ex_info);
+    }
+}
+
+// Funkcja gradientu
+matrix gf4R(matrix theta, matrix X, matrix Y) {
+    try {
+        auto x_size = get_size(X);
+        int m = x_size.second;  // liczba przykładów (100)
+        int n = x_size.first;   // liczba parametrów (3)
+        
+        // Obliczanie hipotezy
+        matrix z = trans(theta) * X;
+        matrix h(1, m);
+        
+        for (int i = 0; i < m; i++) {
+            double z_val = z(0, i);
+            h(0, i) = 1.0 / (1.0 + exp(-z_val));
+        }
+        
+        // Obliczanie gradientu
+        matrix grad(n, 1);  // 3x1
+        
+        for (int j = 0; j < n; j++) {
+            double sum = 0.0;
+            for (int i = 0; i < m; i++) {
+                double h_i = h(0, i);
+                double y_i = Y(0, i);
+                double x_ji = X(j, i);
+                sum += (h_i - y_i) * x_ji;
+            }
+            grad(j) = sum / m;
+        }
+        
+        return grad;
+    }
+    catch (string ex_info) {
+        throw ("matrix gf4R(...):\n" + ex_info);
+    }
+}
