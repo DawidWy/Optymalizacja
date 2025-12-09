@@ -273,11 +273,9 @@ void lab4()
 	matrix ud1 = NAN;
 	matrix ud2 = NAN;
 	Sout<<"x1(0);x2(0);x1;x2;y;f_calls;g_calls;minimum;x1;x2;y;f_calls;g_calls;minimum;x1;x2;y;f_calls;g_calls;H_calls;minimum;\n";
-	for (int i = 0; i < 3; i++) {
-		if (i == 0)
-		h0 = 0.05;
-		else if (i == 1)
-		h0 = 0.1;
+	for (int i = 0; i < 2; i++) {
+		if (i == 0) h0 = 0.05;
+		else if (i == 1) h0 = 0.25;
 		else h0 = 0;
 		for (int j=0;j<=100;j++){
 			matrix x0(2, 1);
@@ -285,17 +283,23 @@ void lab4()
             x0(1) = x0_dist(gen);
 			grad_result = SD(ff4T, gf4T, x0, h0, epsilon, Nmax, ud1, ud2);
 			bool is_global = (abs(grad_result.x(0)) < 0.5 && abs(grad_result.x(1)) < 0.5 && grad_result.y(0) < 0.1);
-			result<<grad_result.x(0)<<";"<<grad_result.x(1)<<";"<<grad_result.y<<";"<<grad_result.f_calls<<grad_result.g_calls<<is_global<<'\n';
+			result<<x0(0)<<";"<<x0(1)<<";"<<grad_result.x(0)<<";"<<grad_result.x(1)<<";"<<grad_result.y<<";"<<grad_result.f_calls<<grad_result.g_calls;
+			if (is_global) result << ";Tak;";
+			else result << ";Nie;";
 			cout<<i<<"   "<<j<<"   "<<"\n";
 			solution::clear_calls();
 			grad_result = CG(ff4T, gf4T, x0, h0, epsilon, Nmax, ud1, ud2);
 			is_global = (abs(grad_result.x(0)) < 0.5 && abs(grad_result.x(1)) < 0.5 && grad_result.y(0) < 0.1);
-			result<<grad_result.x(0)<<";"<<grad_result.x(1)<<";"<<grad_result.y<<";"<<solution::f_calls<<solution::g_calls<<is_global<<'\n';
+			result<<x0(0)<<";"<<x0(1)<<";"<<grad_result.x(0)<<";"<<grad_result.x(1)<<";"<<grad_result.y<<";"<<solution::f_calls<<solution::g_calls;
+			if (is_global) result << ";Tak;";
+			else result << ";Nie;";
 			cout<<i<<"   "<<j<<"   "<<"\n";
 			solution::clear_calls();
 			grad_result = Newton(ff4T, gf4T, hf4T, x0, h0, epsilon, Nmax, ud1, ud2);
 			is_global = (abs(grad_result.x(0)) < 0.5 && abs(grad_result.x(1)) < 0.5 && grad_result.y(0) < 0.1);
-			result<<grad_result.x(0)<<";"<<grad_result.x(1)<<";"<<grad_result.y<<";"<<solution::f_calls<<solution::g_calls<<";"<<solution::H_calls<<is_global<<'\n';
+			result<<x0(0)<<";"<<x0(1)<<";"<<grad_result.x(0)<<";"<<grad_result.x(1)<<";"<<grad_result.y<<";"<<solution::f_calls<<solution::g_calls<<";"<<solution::H_calls;
+			if (is_global) result << ";Tak\n";
+			else result << ";Nie\n";
 			cout<<i<<"   "<<j<<"   "<<"\n";
 			solution::clear_calls();
 		}
