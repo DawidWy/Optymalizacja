@@ -319,32 +319,34 @@ matrix ff3R(matrix x, matrix ud1) {
     
     return -x_end + penalty;
 }
-// Funkcja hipotezy i kosztu
+
+double sigmoid(double z) {
+    return 1.0 / (1.0 + exp(-z));
+}
 matrix hf4R(matrix theta, matrix X, matrix Y) {
     try {
         auto x_size = get_size(X);
-        int m = x_size.second;  // liczba przykładów (100)
         int n = x_size.first;   // liczba cech (3)
+        int m = x_size.second;  // liczba przykładów (100)
         
-        // Obliczanie hipotezy dla każdego przykładu: h = sigmoid(theta^T * x)
-        // theta: 3x1, X: 3x100, theta^T * X: 1x100
-        matrix z = trans(theta) * X;
+        // Obliczanie hipotezy dla każdego przykładu
         matrix h(1, m);
-        
-        for (int i = 0; i < m; i++) {
-            double z_val = z(0, i);
-            h(0, i) = 1.0 / (1.0 + exp(-z_val));
-        }
-        
-        // Obliczanie funkcji kosztu J(theta)
-        matrix cost(1, 1);
         double J = 0.0;
         
         for (int i = 0; i < m; i++) {
-            double h_i = h(0, i);
+            //theta^T * x^i
+            double z = 0.0;
+            for (int j = 0; j < n; j++) {
+                z += theta(j) * X(j, i);
+            }
+            
+            //h_theta(x^i) = sigmoid(z)
+            double h_i = sigmoid(z);
+            
+            //Składowa funkcji kosztu
             double y_i = Y(0, i);
             
-            // Używamy małej stałej epsilon, aby uniknąć log(0)
+            //Sprawdzanie log(0)
             double epsilon = 1e-15;
             if (h_i < epsilon) h_i = epsilon;
             if (h_i > 1 - epsilon) h_i = 1 - epsilon;
@@ -352,7 +354,10 @@ matrix hf4R(matrix theta, matrix X, matrix Y) {
             J += y_i * log(h_i) + (1 - y_i) * log(1 - h_i);
         }
         
+        //Średni koszt
         J = -J / m;
+        
+        matrix cost(1, 1);
         cost(0) = J;
         
         return cost;
@@ -366,29 +371,30 @@ matrix hf4R(matrix theta, matrix X, matrix Y) {
 matrix gf4R(matrix theta, matrix X, matrix Y) {
     try {
         auto x_size = get_size(X);
+        int n = x_size.first;   // liczba cech (3)
         int m = x_size.second;  // liczba przykładów (100)
-        int n = x_size.first;   // liczba parametrów (3)
         
-        // Obliczanie hipotezy
-        matrix z = trans(theta) * X;
-        matrix h(1, m);
+        // Inicjalizacja gradientu
+        matrix grad(n, 1);
         
-        for (int i = 0; i < m; i++) {
-            double z_val = z(0, i);
-            h(0, i) = 1.0 / (1.0 + exp(-z_val));
-        }
-        
-        // Obliczanie gradientu
-        matrix grad(n, 1);  // 3x1
-        
+        // Dla każdego parametru theta_j
         for (int j = 0; j < n; j++) {
             double sum = 0.0;
+            
+            // Dla każdego przykładu treningowego
             for (int i = 0; i < m; i++) {
-                double h_i = h(0, i);
-                double y_i = Y(0, i);
-                double x_ji = X(j, i);
-                sum += (h_i - y_i) * x_ji;
+                //h_theta(x^i)
+                double z = 0.0;
+                for (int k = 0; k < n; k++) {
+                    z += theta(k) * X(k, i);
+                }
+                double h_i = sigmoid(z);
+                
+                //(h_theta(x^i) - y^i) * x_j^i
+                sum += (h_i - Y(0, i)) * X(j, i);
             }
+            
+            //średnia
             grad(j) = sum / m;
         }
         

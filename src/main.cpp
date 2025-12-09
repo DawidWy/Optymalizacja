@@ -259,44 +259,6 @@ void lab3() {
   Sout.close();
 }
 
-// Funkcja do obliczenia dokładności
-double calculate_accuracy(matrix predictions, matrix Y) {
-    auto size = get_size(predictions);
-    int m = size.second;
-    
-    int correct = 0;
-    for (int i = 0; i < m; i++) {
-        if (predictions(0, i) == Y(0, i)) {
-            correct++;
-        }
-    }
-    
-    return static_cast<double>(correct) / m;
-}
-
-// Funkcja do klasyfikacji (zwraca 0 lub 1)
-matrix classify(matrix theta, matrix X_new, double threshold = 0.5) {
-    // theta: 3x1, X_new: 3xm
-    auto size = get_size(X_new);
-    int m = size.second;
-    
-    matrix z = trans(theta) * X_new;
-    matrix predictions(1, m);
-    
-    for (int i = 0; i < m; i++) {
-        double z_val = z(0, i);
-        double probability = 1.0 / (1.0 + exp(-z_val));
-        if (probability >= threshold) {
-            predictions(0, i) = 1;
-        } else {
-            predictions(0, i) = 0;
-        }
-    }
-    
-    return predictions;
-}
-
-// Funkcja pomocnicza do wczytywania danych
 void load_data(const string& x_filename, const string& y_filename, 
                matrix& X, matrix& Y) {
     // Wczytywanie danych X (3 cechy x 100 przykładów)
@@ -308,18 +270,25 @@ void load_data(const string& x_filename, const string& y_filename,
     int n = 3;    // liczba cech + bias term
     int m = 100;  // liczba przykładów
     
-    // Tworzymy macierz 3x100
     X = matrix(n, m);
     
-    // Plik ma format: 3 wiersze, każdy po 100 wartości oddzielonych średnikami
+    // Wczytujemy 3 wiersze z pliku XData.txt
     for (int i = 0; i < n; i++) {
+        string line;
+        getline(x_file, line);  // wczytaj cały wiersz
+        
+        // Podziel linię na wartości oddzielone średnikami
+        stringstream ss(line);
+        string value;
+        
         for (int j = 0; j < m; j++) {
-            x_file >> X(i, j);
-            // Pomijamy średnik
-            if (j < m - 1) {
-                char separator;
-                x_file >> separator; // czytamy ';'
-            }
+            getline(ss, value, ';');
+            // Usuń spacje z początku i końca
+            value.erase(0, value.find_first_not_of(" \t"));
+            value.erase(value.find_last_not_of(" \t") + 1);
+            
+            // Konwertuj na double i zapisz
+            X(i, j) = stod(value);
         }
     }
     x_file.close();
@@ -330,76 +299,30 @@ void load_data(const string& x_filename, const string& y_filename,
         throw string("Nie można otworzyć pliku " + y_filename);
     }
     
-    // Tworzymy macierz 1x100
     Y = matrix(1, m);
     
-    for (int i = 0; i < m; i++) {
-        y_file >> Y(0, i);
-        // Pomijamy średnik
-        if (i < m - 1) {
-            char separator;
-            y_file >> separator; // czytamy ';'
-        }
+    // Wczytujemy 1 wiersz z pliku YData.txt
+    string line;
+    getline(y_file, line);
+    
+    // Podziel linię na wartości oddzielone średnikami
+    stringstream ss(line);
+    string value;
+    
+    for (int j = 0; j < m; j++) {
+        getline(ss, value, ';');
+        // Usuń spacje z początku i końca
+        value.erase(0, value.find_first_not_of(" \t"));
+        value.erase(value.find_last_not_of(" \t") + 1);
+        
+        // Konwertuj na double i zapisz
+        Y(0, j) = stod(value);
     }
     y_file.close();
 }
 
-// Funkcja do wyświetlania informacji o danych
-void print_data_info(const matrix& X, const matrix& Y) {
-    auto x_size = get_size(X);
-    auto y_size = get_size(Y);
-    
-    cout << "Dane X: " << x_size.first << " x " << x_size.second << endl;
-    cout << "Dane Y: " << y_size.first << " x " << y_size.second << endl;
-    
-    // Wyświetl kilka pierwszych przykładów
-    cout << "\nPierwsze 5 przykładów:" << endl;
-    for (int i = 0; i < 5; i++) {
-        cout << "Przykład " << i+1 << ": ";
-        cout << "x0=" << X(0, i) << ", x1=" << X(1, i) << ", x2=" << X(2, i);
-        cout << " -> y=" << Y(0, i) << endl;
-    }
-}
-
 void lab4()
 {
-	// Wczytanie danych
-	matrix X, Y;
-	load_data("XData.txt", "YData.txt", X, Y);
-	
-	// Sprawdzenie danych
-	print_data_info(X, Y);
-	
-	// Inicjalizacja parametrów theta (np. zera)
-	matrix theta0(3, 1);
-	theta0(0) = 0;
-	theta0(1) = 0;
-	theta0(2) = 0;
-	
-	cout << "\nPoczątkowe parametry theta:" << endl;
-	cout << "theta0 = " << theta0(0) << endl;
-	cout << "theta1 = " << theta0(1) << endl;
-	cout << "theta2 = " << theta0(2) << endl;
-	
-	// Oblicz początkowy koszt
-	matrix initial_cost = hf4R(theta0, X, Y);
-	cout << "Początkowy koszt: " << initial_cost(0) << endl;
-	
-	// Uruchomienie metody najszybszego spadku
-	// h0 = 0 oznacza, że będziemy używać optymalnego kroku
-	cout << "\nUruchamianie metody najszybszego spadku..." << endl;
-	solution result = SD(hf4R, gf4R, theta0, 0.0, 1e-6, 10000, X, Y);
-	
-	cout << "\nOptymalne parametry theta: " << endl;
-	cout << "theta0 = " << result.x(0) << endl;
-	cout << "theta1 = " << result.x(1) << endl;
-	cout << "theta2 = " << result.x(2) << endl;
-	cout << "Wartość funkcji kosztu: " << result.y << endl;
-	
-	// Oblicz dokładność na danych treningowych
-	matrix predictions = classify(result.x, X);
-	double accuracy = calculate_accuracy(predictions, Y);
-	cout << "Dokładność na danych treningowych: " << accuracy * 100 << "%" << endl;
 }
 
 void lab5()
