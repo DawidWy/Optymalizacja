@@ -321,7 +321,6 @@ matrix ff3R(matrix x, matrix ud1) {
     
     return -x_end + penalty;
 }
-
 matrix ff4T(matrix x, matrix ud1, matrix ud2){
     double x1 = x(0);
 	double x2 = x(1);
@@ -329,12 +328,88 @@ matrix ff4T(matrix x, matrix ud1, matrix ud2){
 	return result;
 }
 
-matrix gf4T(matrix x, matrix ud1, matrix ud2)
-{
-	matrix g(2, 1);
-	double x1 = x(0);
-	double x2 = x(1);
-	g(0) = pow(x1, 5) - 4.2 * pow(x1, 3) + 4.0 * x1 + x2;
-	g(1) = 2.0 * x2 + x1;
-	return g;
+double sigmoid(double z) {
+    return 1.0 / (1.0 + exp(-z));
+}
+
+matrix hf4R(matrix theta, matrix X, matrix Y) {
+    try {
+        auto x_size = get_size(X);
+        int n = x_size.first;   // liczba cech (3)
+        int m = x_size.second;  // liczba przykładów (100)
+        
+        // Obliczanie hipotezy dla każdego przykładu
+        matrix h(1, m);
+        double J = 0.0;
+        
+        for (int i = 0; i < m; i++) {
+            //theta^T * x^i
+            double z = 0.0;
+            for (int j = 0; j < n; j++) {
+                z += theta(j) * X(j, i);
+            }
+            
+            //h_theta(x^i) = sigmoid(z)
+            double h_i = sigmoid(z);
+            
+            //Składowa funkcji kosztu
+            double y_i = Y(0, i);
+            
+            //Sprawdzanie log(0)
+            double epsilon = 1e-15;
+            if (h_i < epsilon) h_i = epsilon;
+            if (h_i > 1 - epsilon) h_i = 1 - epsilon;
+            
+            J += y_i * log(h_i) + (1 - y_i) * log(1 - h_i);
+        }
+        
+        //Średni koszt
+        J = -J / m;
+        
+        matrix cost(1, 1);
+        cost(0) = J;
+        
+        return cost;
+    }
+    catch (string ex_info) {
+        throw ("matrix hf4R(...):\n" + ex_info);
+    }
+}
+
+// Funkcja gradientu
+matrix gf4R(matrix theta, matrix X, matrix Y) {
+    try {
+        auto x_size = get_size(X);
+        int n = x_size.first;   // liczba cech (3)
+        int m = x_size.second;  // liczba przykładów (100)
+        
+        // Inicjalizacja gradientu
+        matrix grad(n, 1);
+        
+        // Dla każdego parametru theta_j
+        for (int j = 0; j < n; j++) {
+            double sum = 0.0;
+            
+            // Dla każdego przykładu treningowego
+            for (int i = 0; i < m; i++) {
+                //h_theta(x^i)
+                double z = 0.0;
+                for (int k = 0; k < n; k++) {
+                    z += theta(k) * X(k, i);
+                }
+                double h_i = sigmoid(z);
+                
+                //(h_theta(x^i) - y^i) * x_j^i
+                sum += (h_i - Y(0, i)) * X(j, i);
+            }
+            
+            //średnia
+            grad(j) = sum / m;
+        }
+        
+        return grad;
+    }
+    catch (string ex_info) {
+        throw ("matrix gf4R(...):\n" + ex_info);
+    }
 }
