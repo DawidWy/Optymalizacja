@@ -335,38 +335,48 @@ void lab4()
 	std::stringstream result;
 	matrix ud1 = NAN;
 	matrix ud2 = NAN;
-	Sout<<"x1(0);x2(0);x1;x2;y;f_calls;g_calls;minimum;x1;x2;y;f_calls;g_calls;minimum;x1;x2;y;f_calls;g_calls;H_calls;minimum;\n";
-	for (int i = 0; i < 2; i++) {
+	bool h_golden = false;
+	Sout << "x1(0);x2(0);"
+         << "SD_x1;SD_x2;SD_y;SD_f_calls;SD_g_calls;SD_minimum;"
+         << "CG_x1;CG_x2;CG_y;CG_f_calls;CG_g_calls;CG_minimum;"
+         << "N_x1;N_x2;N_y;N_f_calls;N_g_calls;N_H_calls;N_minimum;\n";
+	for (int i = 0; i < 3; i++) {
 		if (i == 0) h0 = 0.05;
 		else if (i == 1) h0 = 0.25;
-		else h0 = 0;
-		for (int j=0;j<=100;j++){
+		else h_golden = true;
+		for (int j=0;j<100;j++){
 			matrix x0(2, 1);
 			x0(0) = x0_dist(gen);
             x0(1) = x0_dist(gen);
-			grad_result = SD(ff4T, gf4T, x0, h0, epsilon, Nmax, ud1, ud2);
-			bool is_global = (abs(grad_result.x(0)) < 0.5 && abs(grad_result.x(1)) < 0.5 && grad_result.y(0) < 0.1);
-			result<<x0(0)<<";"<<x0(1)<<";"<<grad_result.x(0)<<";"<<grad_result.x(1)<<";"<<grad_result.y<<";"<<grad_result.f_calls<<grad_result.g_calls;
+			grad_result = SD(ff4T, gf4T, x0, h0, epsilon, Nmax, ud1, ud2, h_golden);
+			bool is_global = (abs(grad_result.x(0)) < 0.5 && abs(grad_result.x(1))
+			 < 0.5 && grad_result.y(0) < 0.1);
+			result<<x0(0)<<";"<<x0(1)<<";"<<grad_result.x(0)<<";"<<grad_result.x(1)
+			<<";"<<grad_result.y<<";"<<grad_result.f_calls<<grad_result.g_calls;
 			if (is_global) result << ";Tak;";
 			else result << ";Nie;";
 			cout<<i<<"   "<<j<<"   "<<"\n";
 			solution::clear_calls();
-			grad_result = CG(ff4T, gf4T, x0, h0, epsilon, Nmax, ud1, ud2);
-			is_global = (abs(grad_result.x(0)) < 0.5 && abs(grad_result.x(1)) < 0.5 && grad_result.y(0) < 0.1);
-			result<<x0(0)<<";"<<x0(1)<<";"<<grad_result.x(0)<<";"<<grad_result.x(1)<<";"<<grad_result.y<<";"<<solution::f_calls<<solution::g_calls;
+			grad_result = CG(ff4T, gf4T, x0, h0, epsilon, Nmax, ud1, ud2, h_golden);
+			is_global = (abs(grad_result.x(0)) < 0.5 && abs(grad_result.x(1))
+			 < 0.5 && grad_result.y(0) < 0.1);
+			result<<x0(0)<<";"<<x0(1)<<";"<<grad_result.x(0)<<";"<<grad_result.x(1)
+			<<";"<<grad_result.y<<";"<<solution::f_calls<<solution::g_calls;
 			if (is_global) result << ";Tak;";
 			else result << ";Nie;";
 			cout<<i<<"   "<<j<<"   "<<"\n";
 			solution::clear_calls();
-			grad_result = Newton(ff4T, gf4T, hf4T, x0, h0, epsilon, Nmax, ud1, ud2);
-			is_global = (abs(grad_result.x(0)) < 0.5 && abs(grad_result.x(1)) < 0.5 && grad_result.y(0) < 0.1);
-			result<<x0(0)<<";"<<x0(1)<<";"<<grad_result.x(0)<<";"<<grad_result.x(1)<<";"<<grad_result.y<<";"<<solution::f_calls<<solution::g_calls<<";"<<solution::H_calls;
+			grad_result = Newton(ff4T, gf4T, hf4T, x0, h0, epsilon, Nmax, ud1, ud2, h_golden);
+			is_global = (abs(grad_result.x(0)) < 0.5 && abs(grad_result.x(1))
+			 < 0.5 && grad_result.y(0) < 0.1);
+			result<<x0(0)<<";"<<x0(1)<<";"<<grad_result.x(0)<<";"<<grad_result.x(1)
+			<<";"<<grad_result.y<<";"<<solution::f_calls<<solution::g_calls<<";"
+			<<solution::H_calls;
 			if (is_global) result << ";Tak\n";
 			else result << ";Nie\n";
 			cout<<i<<"   "<<j<<"   "<<"\n";
 			solution::clear_calls();
-		}
-	}
+		}}
 	Sout<<result.str();
 	Sout.close();
 }
