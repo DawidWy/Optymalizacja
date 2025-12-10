@@ -322,6 +322,84 @@ void load_data(const string& x_filename, const string& y_filename,
     y_file.close();
 }
 
+matrix calculate_probabilities(matrix theta, matrix X) {
+    try {
+        auto x_size = get_size(X);
+        int n = x_size.first;
+        int m = x_size.second;
+        
+        // Prawdopodobieństwa dla każdego przykładu
+        matrix probabilities(1, m);
+        
+        for (int i = 0; i < m; i++) {
+            // Oblicz theta^T * x^i
+            double z = 0.0;
+            for (int j = 0; j < n; j++) {
+                z += theta(j) * X(j, i);
+            }
+            
+            // Oblicz h_theta(x^i) = sigmoid(z) - prawdopodobieństwo przyjęcia
+            probabilities(0, i) = 1.0 / (1.0 + exp(-z));
+        }
+        
+        return probabilities;
+    }
+    catch (string ex_info) {
+        throw ("matrix calculate_probabilities(...):\n" + ex_info);
+    }
+}
+
+matrix calculate_predictions(matrix theta, matrix X, double threshold = 0.5) {
+    try {
+        matrix probabilities = calculate_probabilities(theta, X);
+        auto size = get_size(probabilities);
+        int m = size.second;
+        
+        matrix predictions(1, m);
+        
+        for (int i = 0; i < m; i++) {
+            if (probabilities(0, i) >= threshold) {
+                predictions(0, i) = 1;
+            } else {
+                predictions(0, i) = 0;
+            }
+        }
+        
+        return predictions;
+    }
+    catch (string ex_info) {
+        throw ("matrix calculate_predictions(...):\n" + ex_info);
+    }
+}
+
+
+double calculate_accuracy_percentage(matrix theta, matrix X, matrix Y) {
+    try {
+        auto x_size = get_size(X);
+        int m = x_size.second;  // liczba przykładów
+        
+        // Oblicz predykcje
+        matrix predictions = calculate_predictions(theta, X);
+        
+        // Policz poprawne klasyfikacje
+        int correct = 0;
+        for (int i = 0; i < m; i++) {
+            if (predictions(0, i) == Y(0, i)) {
+                correct++;
+            }
+        }
+        
+        // Oblicz procent
+        double accuracy_percentage = (static_cast<double>(correct) / m) * 100.0;
+        
+        return accuracy_percentage;
+    }
+    catch (string ex_info) {
+        throw ("matrix calculate_accuracy_percentage(...):\n" + ex_info);
+    }
+}
+
+
 void lab4()
 {
 	double epsilon = 1e-6;
@@ -353,6 +431,68 @@ void lab4()
 	}
 	Sout<<result.str();
 	Sout.close();
+
+	matrix X, Y;
+    load_data("XData.txt", "YData.txt", X, Y);
+	std::ofstream Rout("symulacjaR_lab4.csv");
+	
+	epsilon = 1e-6;
+
+	//Parametry theta
+	matrix theta0(3, 1);
+    theta0(0) = 0;
+    theta0(1) = 0;
+    theta0(2) = 0;
+
+	// Początkowy koszt
+    matrix initial_cost = hf4R(theta0, X, Y);
+	
+	solution::g_calls=0;
+	solution res = CG(hf4R, gf4R, theta0, 0, 1e-14, 10000, X, Y);
+	Rout << res.x(0) << ";" << res.x(1) << ";" << res.x(2) << ";" << m2d(hf4R(res.x, X, Y)) << ";" << calculate_accuracy_percentage(res.x, X, Y) << ";" << solution::g_calls << "\n";
+
+	solution::g_calls=0;
+	res = CG(hf4R, gf4R, theta0, 0.001, 1e-14, 10000, X, Y);
+	Rout << res.x(0) << ";" << res.x(1) << ";" << res.x(2) << ";" << m2d(hf4R(res.x, X, Y)) << ";" << calculate_accuracy_percentage(res.x, X, Y) << ";" << solution::g_calls << "\n";
+
+	solution::g_calls=0;
+	res = CG(hf4R, gf4R, theta0, 0.0001, 1e-14, 10000, X, Y);
+	Rout << res.x(0) << ";" << res.x(1) << ";" << res.x(2) << ";" << m2d(hf4R(res.x, X, Y)) << ";" << calculate_accuracy_percentage(res.x, X, Y) << ";" << solution::g_calls << "\n";
+
+	Rout.close();
+
+	// matrix X, Y;
+    // load_data("XData.txt", "YData.txt", X, Y);
+    
+    // matrix theta0(3, 1);
+    // theta0(0) = 0;
+    // theta0(1) = 0;
+    // theta0(2) = 0;
+    
+    // // Oblicz gradient w punkcie startowym
+    // matrix grad = gf4R(theta0, X, Y);
+    // matrix direction = -grad;  // kierunek najszybszego spadku
+    
+    // cout << "Gradient w (0,0,0): [" << grad(0) << ", " << grad(1) << ", " << grad(2) << "]" << endl;
+    
+    // // Test find_step_length
+    // double alpha = find_step_length(theta0, direction, hf4R, X, Y);
+    
+    // cout << "Znaleziony krok: " << alpha << endl;
+    
+    // // Sprawdź wartość funkcji przed i po
+    // matrix f_before = hf4R(theta0, X, Y);
+    // matrix theta_new = theta0 + alpha * direction;
+    // matrix f_after = hf4R(theta_new, X, Y);
+    
+    // cout << "f(θ0) = " << f_before(0) << endl;
+    // cout << "f(θ0 + α*d) = " << f_after(0) << endl;
+    // cout << "Różnica: " << f_before(0) - f_after(0) << endl;
+    
+    // // Powinno być: f_after < f_before
+    // if (f_after(0) >= f_before(0)) {
+    //     cout << "UWAGA: Funkcja NIE zmalała!" << endl;
+    // }
 }
 
 void lab5()
