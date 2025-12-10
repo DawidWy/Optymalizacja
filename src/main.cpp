@@ -345,7 +345,7 @@ void lab4()
 			matrix x0(2, 1);
 			x0(0) = x0_dist(gen);
             x0(1) = x0_dist(gen);
-			grad_result = SD(ff4T, gf4T, x0, h0, epsilon, Nmax, ud1, ud2);
+			//grad_result = SD(ff4T, gf4T, x0, h0, epsilon, Nmax, ud1, ud2);
 			result<<grad_result.x(0)<<";"<<grad_result.x(1)<<";"<<
 			grad_result.y<<";"<<grad_result.f_calls<<grad_result.g_calls;
 			solution::clear_calls();
