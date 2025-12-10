@@ -18,10 +18,10 @@ solution Rosen(std::function<matrix(matrix,matrix,matrix)> ff, const matrix &x0,
 solution pen(std::function<matrix(matrix,matrix,matrix)> ff, matrix x0, double c, double dc, double epsilon, int Nmax, matrix ud1 = NAN, matrix ud2 = NAN); // throw (string);
 solution sym_NM(std::function<matrix(matrix,matrix,matrix)> ff, matrix x0, double s, double alpha, double beta, double gamma, double delta, double epsilon, int Nmax, matrix ud1 = NAN, matrix ud2 = NAN); // throw (string);
 
-solution SD(std::function<matrix(matrix,matrix,matrix)> ff, matrix(*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1 = NAN, matrix ud2 = NAN); // throw (string);
-solution CG(std::function<matrix(matrix,matrix,matrix)> ff, matrix(*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1 = NAN, matrix ud2 = NAN); // throw (string);
-solution Newton(std::function<matrix(matrix,matrix,matrix)> ff, matrix(*gf)(matrix, matrix, matrix), matrix(*Hf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1 = NAN, matrix ud2 = NAN); // throw (string);
-solution golden(std::function<matrix(matrix,matrix,matrix)> ff, double a, double b, double epsilon, int Nmax, matrix ud1 = NAN, matrix ud2 = NAN); // throw (string);
+solution SD(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2, bool h_golden);
+solution CG(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2, bool h_golden); // throw (string);
+solution Newton(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(matrix, matrix, matrix), matrix (*Hf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2, bool h_golden); // throw (string);
+solution golden(std::function<matrix(matrix,matrix,matrix)> ff, double a, double b, double epsilon, int Nmax, matrix ud1, matrix ud2);
 
 solution Powell(std::function<matrix(matrix,matrix,matrix)> ff, matrix x0, double epsilon, int Nmax, matrix ud1 = NAN, matrix ud2 = NAN); // throw (string);
 

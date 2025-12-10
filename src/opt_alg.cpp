@@ -669,119 +669,153 @@ solution pen(std::function<matrix(matrix, matrix, matrix)> ff, matrix x0, double
 
 matrix line_function(matrix alpha_mat, matrix x0, matrix d,
                      std::function<matrix(matrix, matrix, matrix)> ff,
-                     matrix ud1, matrix ud2) {
-  // alpha_mat to macierz 1x1 zawierająca wartość alpha, czyli długości kroku, to jest to co będzie optymalizowane
-  double alpha = alpha_mat(0);
-  matrix x_new = x0 + alpha * d;
-  return ff(x_new, ud1, ud2);
+                     matrix ud1, matrix ud2)
+{
+    // alpha_mat to macierz 1x1 zawierająca wartość alpha, czyli długości kroku, to jest to co będzie optymalizowane
+    double alpha = alpha_mat(0);
+    matrix x_new = x0 + alpha * d;
+    return ff(x_new, ud1, ud2);
 }
 double find_step_length(matrix x0, matrix direction,
-						std::function<matrix(matrix, matrix, matrix)> ff,
-						matrix ud1, matrix ud2, double epsilon = 1e-6, int Nmax = 1000) {
-
-  // Funkcja jednej zmiennej alpha
-  auto line_func = [x0, direction, ff, ud1, ud2](double alpha) -> double {
-	matrix x_new = x0 + alpha * direction;
-	matrix result = ff(x_new, ud1, ud2);
-	return result(0);
-  };
-
-  // 1. Znajdź przedział zawierający minimum
-  double a = 0.0;
-  double fa = line_func(a);
-
-  // Początkowy mały krok
-  double b = 1e-3;
-  double fb = line_func(b);
-
-  // Jeśli funkcja rośnie od razu, zmniejsz b
-  int tries = 0;
-  while (fb > fa && tries < 10) {
-	b *= 0.1;
-	fb = line_func(b);
-	tries++;
-  }
-
-  // Jeśli nadal rośnie, minimum jest w 0
-  if (fb > fa) {
-	return 0.0;
-  }
-
-  // Teraz fb < fa, rozszerzaj przedział aż funkcja zacznie rosnąć
-  double c = b;
-  double fc = fb;
-
-  while (fc <= fb && c < 1e3) {
-	b = c;
-	fb = fc;
-	c *= 2.0;
-	fc = line_func(c);
-  }
-
-  // Teraz mamy a=0, b, c takie, że fb < fa i fb < fc
-  // Przedział [a, c] zawiera minimum
-  double left = a;
-  double right = c;
-
-  // Przekształcamy line_func na funkcję przyjmującą matrix (dla golden)
-  auto line_func_matrix = [line_func](matrix alpha_mat, matrix,
-									  matrix) -> matrix {
-	matrix result(1, 1);
-	result(0) = line_func(alpha_mat(0));
-	return result;
-  };
-
-  // Uruchamiamy metodę złotego podziału
-  solution step =
-	  golden(line_func_matrix, left, right, epsilon, Nmax, matrix(), matrix());
-  return step.x(0);
-}
-
-solution SD(std::function<matrix(matrix,matrix,matrix)> ff, matrix(*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
+                        std::function<matrix(matrix, matrix, matrix)> ff,
+                        matrix ud1, matrix ud2, double a = 0.0, double b = 1.0,
+                        double epsilon = 1e-6, int Nmax = 1000)
 {
-	try
-	{
-		solution Xopt;
-		//Tu wpisz kod funkcji
 
-		return Xopt;
-	}
-	catch (string ex_info)
-	{
-		throw ("solution SD(...):\n" + ex_info);
-	}
+    // Tworzymy funkcję lambda dla metody złotego podziału (to tylko po to aby dodatkowe argumenty spakować aby to pasowało do goldena)
+    auto line_func = [x0, direction, ff, ud1, ud2](matrix alpha_mat, matrix,
+                                                   matrix) -> matrix
+    {
+        return line_function(alpha_mat, x0, direction, ff, ud1, ud2);
+    };
+
+    // Znajdujemy optymalny krok za pomocą metody złotego podziału
+    solution step = golden(line_func, a, b, epsilon, Nmax, matrix(), matrix());
+
+    return m2d(step.x); // optymalna długość kroku
 }
 
-solution CG(std::function<matrix(matrix,matrix,matrix)> ff, matrix(*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
+solution SD(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2, bool h_golden)
 {
-	try
-	{
-		solution Xopt;
-		//Tu wpisz kod funkcji
-
-		return Xopt;
-	}
-	catch (string ex_info)
-	{
-		throw ("solution CG(...):\n" + ex_info);
-	}
+    try
+    {
+        solution Xopt;
+        Xopt.y = NAN;
+        solution::clear_calls();
+        matrix x = x0;
+        matrix x_old;
+        matrix fx_old = NAN;
+        double h = h0;
+        do
+        {
+            x_old = x;
+            matrix d = -gf(x, ud1, ud2);
+            Xopt.g_calls++;
+            if (h_golden)
+            {
+                h = find_step_length(x, d, ff, ud1, ud2, epsilon, h0, epsilon, Nmax);
+            }
+            x = x + h * d;
+            if (solution::g_calls > Nmax || solution::H_calls > Nmax || solution::f_calls > Nmax)
+            {
+                throw std::string("Przekroczono Nmax w metodzie Stochastic Descent (SD).");
+            }
+            fx_old = Xopt.y;
+            Xopt.x = x;
+            Xopt.fit_fun(ff, ud1, ud2);
+        } while (fx_old == NAN || norm(Xopt.y - fx_old) > epsilon);
+        return Xopt;
+    }
+    catch (string ex_info)
+    {
+        throw("solution SD(...):\n" + ex_info);
+    }
 }
 
-solution Newton(std::function<matrix(matrix,matrix,matrix)> ff, matrix(*gf)(matrix, matrix, matrix),
-	matrix(*Hf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
+solution CG(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2, bool h_golden)
 {
-	try
-	{
-		solution Xopt;
-		//Tu wpisz kod funkcji
-
-		return Xopt;
-	}
-	catch (string ex_info)
-	{
-		throw ("solution Newton(...):\n" + ex_info);
-	}
+    try
+    {
+        solution Xopt;
+        Xopt.y = NAN;
+        Xopt.x = x0;
+        solution::clear_calls();
+        int n = get_len(x0);
+        Xopt.grad(gf, ud1, ud2);
+        matrix d = -Xopt.g;
+        matrix x_old;
+        matrix fx_old = NAN;
+        double h = h0;
+        do
+        {
+            x_old = Xopt.x;
+            fx_old = Xopt.y;
+            matrix g_old = Xopt.g;
+            if (h_golden)
+            {
+                h = find_step_length(Xopt.x, d, ff, ud1, ud2, epsilon, h0, epsilon, Nmax);
+            }
+            Xopt.x = x_old + h * d;
+            Xopt.grad(gf, ud1, ud2);
+            double g_norm = norm(Xopt.g);
+            double g_old_norm = norm(g_old);
+            double beta = (g_norm * g_norm) / (g_old_norm * g_old_norm);
+            d = -Xopt.g + beta * d;
+            Xopt.fit_fun(ff, ud1, ud2);
+            if (solution::g_calls > Nmax || solution::H_calls > Nmax || solution::f_calls > Nmax)
+            {
+                throw std::string("Przekroczono Nmax w metodzie Conjugate Gradient (CG).");
+            }
+        } while (fx_old == NAN || norm(Xopt.y - fx_old) > epsilon);
+        return Xopt;
+    }
+    catch (string ex_info)
+    {
+        throw("solution CG(...):\n" + ex_info);
+    }
 }
+
+solution Newton(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(matrix, matrix, matrix),
+                matrix (*Hf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2, bool h_golden)
+{
+    try
+    {
+        solution Xopt;
+        solution::clear_calls();
+        matrix x = x0;
+        matrix x_old;
+        double h = h0;
+        Xopt.y = NAN;
+        matrix fx_old = NAN;
+        do
+        {
+            x_old = x;
+            matrix g = gf(x, ud1, ud2);
+            Xopt.g_calls++;
+            matrix H = Hf(x, ud1, ud2);
+            Xopt.H_calls++;
+            matrix d = inv(H) * -g;
+            if (h_golden)
+            {
+                h = find_step_length(x, d, ff, ud1, ud2, epsilon, h0, epsilon, Nmax);
+            }
+            x = x + h * d;
+            if (solution::g_calls > Nmax || solution::H_calls > Nmax || solution::f_calls > Nmax)
+            {
+                throw std::string("Przekroczono Nmax w metodzie Newtona.");
+            }
+            fx_old = Xopt.y;
+            Xopt.x = x;
+            Xopt.fit_fun(ff, ud1, ud2);
+        } while (fx_old == NAN || norm(Xopt.y - fx_old) > epsilon);
+        return Xopt;
+    }
+    catch (string ex_info)
+    {
+        throw("solution Newton(...):\n" + ex_info);
+    }
+}
+
 
 solution golden(std::function<matrix(matrix,matrix,matrix)> ff, double a, double b, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
