@@ -840,7 +840,7 @@ solution SD(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(matri
             if(h == 0){
                 h = find_step_length(x, d, ff, ud1, ud2, 0.0, 1.0, epsilon, Nmax);
             }
-            if (h_golden)
+            if (h_golden || h == 0)
             {
                 h = find_step_length(x, d, ff, ud1, ud2, epsilon, Nmax);
             }
@@ -880,7 +880,7 @@ solution CG(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(matri
             x_old = Xopt.x;
             fx_old = Xopt.y;
             matrix g_old = Xopt.g;
-            if (h_golden)
+            if (h_golden || h == 0)
             {
                 h =  find_step_length(Xopt.x, d, ff, ud1, ud2, epsilon, Nmax);
             }
@@ -924,7 +924,7 @@ solution Newton(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(m
             matrix H = Hf(x, ud1, ud2);
             Xopt.H_calls++;
             matrix d = inv(H) * -g;
-            if (h_golden)
+            if (h_golden || h == 0)
             {
                 h =  find_step_length(x, d, ff, ud1, ud2, epsilon, Nmax);
             }
