@@ -4,6 +4,7 @@
 #include <cmath>
 #include <stdexcept>
 #include <system_error>
+#include <string>
 #include<vector>
 #include<utility>
 
@@ -880,99 +881,6 @@ solution Powell(std::function<matrix(matrix,matrix,matrix)> ff, matrix x0, doubl
 }
 
 solution EA(std::function<matrix(matrix,matrix,matrix)> ff, int N, matrix lb, matrix ub, int mi, int lambda, matrix sigma0, double epsilon, int Nmax, matrix ud1, matrix ud2)
-{
-	try
-	{
-		solution Xopt;
-		//Tu wpisz kod funkcji
-
-		return Xopt;
-	}
-	catch (string ex_info)
-	{
-		throw ("solution EA(...):\n" + ex_info);
-	}
-}
-
-
-
-solution SD(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
-{
-	try
-	{
-		solution Xopt;
-		//Tu wpisz kod funkcji
-
-		return Xopt;
-	}
-	catch (string ex_info)
-	{
-		throw ("solution SD(...):\n" + ex_info);
-	}
-}
-
-solution CG(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
-{
-	try
-	{
-		solution Xopt;
-		//Tu wpisz kod funkcji
-
-		return Xopt;
-	}
-	catch (string ex_info)
-	{
-		throw ("solution CG(...):\n" + ex_info);
-	}
-}
-
-solution Newton(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, matrix),
-	matrix(*Hf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
-{
-	try
-	{
-		solution Xopt;
-		//Tu wpisz kod funkcji
-
-		return Xopt;
-	}
-	catch (string ex_info)
-	{
-		throw ("solution Newton(...):\n" + ex_info);
-	}
-}
-
-solution golden(matrix(*ff)(matrix, matrix, matrix), double a, double b, double epsilon, int Nmax, matrix ud1, matrix ud2)
-{
-	try
-	{
-		solution Xopt;
-		//Tu wpisz kod funkcji
-
-		return Xopt;
-	}
-	catch (string ex_info)
-	{
-		throw ("solution golden(...):\n" + ex_info);
-	}
-}
-
-solution Powell(matrix(*ff)(matrix, matrix, matrix), matrix x0, double epsilon, int Nmax, matrix ud1, matrix ud2)
-{
-	try
-	{
-		solution Xopt;
-		//Tu wpisz kod funkcji
-
-		return Xopt;
-	}
-	catch (string ex_info)
-	{
-		throw ("solution Powell(...):\n" + ex_info);
-	}
-}
-
-solution EA(matrix(*ff)(matrix, matrix, matrix), int N, matrix lb, matrix ub, int mi, int lambda, matrix sigma0, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
 	try
 	{
