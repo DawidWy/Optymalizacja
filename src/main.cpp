@@ -263,7 +263,7 @@ void lab4()
 {
 	double epsilon = 1e-6;
 	double h0 = 0;
-	int Nmax = 1000000;
+	int Nmax = 1e6;
 	std::random_device rd;
 	std::mt19937 gen(rd());
 	std::uniform_real_distribution<> x0_dist(-2,2);
