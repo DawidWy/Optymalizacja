@@ -676,20 +676,65 @@ matrix line_function(matrix alpha_mat, matrix x0, matrix d,
   return ff(x_new, ud1, ud2);
 }
 double find_step_length(matrix x0, matrix direction,
-                        std::function<matrix(matrix, matrix, matrix)> ff,
-                        matrix ud1, matrix ud2, double a = 0.0, double b = 1.0,
-                        double epsilon = 1e-6, int Nmax = 1000) {
+						std::function<matrix(matrix, matrix, matrix)> ff,
+						matrix ud1, matrix ud2, double epsilon = 1e-6, int Nmax = 1000) {
 
-  // Tworzymy funkcję lambda dla metody złotego podziału (to tylko po to aby dodatkowe argumenty spakować aby to pasowało do goldena)
-  auto line_func = [x0, direction, ff, ud1, ud2](matrix alpha_mat, matrix,
-                                                 matrix) -> matrix {
-    return line_function(alpha_mat, x0, direction, ff, ud1, ud2);
+  // Funkcja jednej zmiennej alpha
+  auto line_func = [x0, direction, ff, ud1, ud2](double alpha) -> double {
+	matrix x_new = x0 + alpha * direction;
+	matrix result = ff(x_new, ud1, ud2);
+	return result(0);
   };
 
-  // Znajdujemy optymalny krok za pomocą metody złotego podziału
-  solution step = golden(line_func, a, b, epsilon, Nmax, matrix(), matrix());
+  // 1. Znajdź przedział zawierający minimum
+  double a = 0.0;
+  double fa = line_func(a);
 
-  return m2d(step.x); // optymalna długość kroku
+  // Początkowy mały krok
+  double b = 1e-3;
+  double fb = line_func(b);
+
+  // Jeśli funkcja rośnie od razu, zmniejsz b
+  int tries = 0;
+  while (fb > fa && tries < 10) {
+	b *= 0.1;
+	fb = line_func(b);
+	tries++;
+  }
+
+  // Jeśli nadal rośnie, minimum jest w 0
+  if (fb > fa) {
+	return 0.0;
+  }
+
+  // Teraz fb < fa, rozszerzaj przedział aż funkcja zacznie rosnąć
+  double c = b;
+  double fc = fb;
+
+  while (fc <= fb && c < 1e3) {
+	b = c;
+	fb = fc;
+	c *= 2.0;
+	fc = line_func(c);
+  }
+
+  // Teraz mamy a=0, b, c takie, że fb < fa i fb < fc
+  // Przedział [a, c] zawiera minimum
+  double left = a;
+  double right = c;
+
+  // Przekształcamy line_func na funkcję przyjmującą matrix (dla golden)
+  auto line_func_matrix = [line_func](matrix alpha_mat, matrix,
+									  matrix) -> matrix {
+	matrix result(1, 1);
+	result(0) = line_func(alpha_mat(0));
+	return result;
+  };
+
+  // Uruchamiamy metodę złotego podziału
+  solution step =
+	  golden(line_func_matrix, left, right, epsilon, Nmax, matrix(), matrix());
+  return step.x(0);
 }
 
 solution SD(std::function<matrix(matrix,matrix,matrix)> ff, matrix(*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
