@@ -837,6 +837,9 @@ solution SD(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(matri
             x_old = x;
             matrix d = -gf(x, ud1, ud2);
             Xopt.g_calls++;
+            if(h == 0){
+                h = find_step_length(x, d, ff, ud1, ud2, 0.0, 1.0, epsilon, Nmax);
+            }
             if (h_golden)
             {
                 h = find_step_length(x, d, ff, ud1, ud2, epsilon, Nmax);
