@@ -836,7 +836,7 @@ solution CG(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(matri
             matrix g_old = Xopt.g;
             if (h_golden)
             {
-                h = find_step_length(x, d, ff, ud1, ud2, epsilon, h0, epsilon, Nmax);
+                h = find_step_length(Xopt.x, d, ff, ud1, ud2, epsilon, h0, epsilon, Nmax);
             }
             Xopt.x = x_old + h * d;
             Xopt.grad(gf, ud1, ud2);
