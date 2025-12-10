@@ -839,7 +839,7 @@ solution SD(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(matri
             Xopt.g_calls++;
             if (h_golden)
             {
-                h = find_step_length(x, d, ff, ud1, ud2, epsilon, h0, epsilon, Nmax);
+                h = find_step_length(x, d, ff, ud1, ud2, epsilon, Nmax);
             }
             x = x + h * d;
             if (solution::g_calls > Nmax || solution::H_calls > Nmax || solution::f_calls > Nmax)
@@ -879,7 +879,7 @@ solution CG(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(matri
             matrix g_old = Xopt.g;
             if (h_golden)
             {
-                h = find_step_length(Xopt.x, d, ff, ud1, ud2, epsilon, h0, epsilon, Nmax);
+                h =  find_step_length(Xopt.x, d, ff, ud1, ud2, epsilon, Nmax);
             }
             Xopt.x = x_old + h * d;
             Xopt.grad(gf, ud1, ud2);
@@ -923,7 +923,7 @@ solution Newton(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(m
             matrix d = inv(H) * -g;
             if (h_golden)
             {
-                h = find_step_length(x, d, ff, ud1, ud2, epsilon, h0, epsilon, Nmax);
+                h =  find_step_length(x, d, ff, ud1, ud2, epsilon, Nmax);
             }
             x = x + h * d;
             if (solution::g_calls > Nmax || solution::H_calls > Nmax || solution::f_calls > Nmax)
