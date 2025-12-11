@@ -18,6 +18,9 @@ solution Rosen(std::function<matrix(matrix,matrix,matrix)> ff, const matrix &x0,
 solution pen(std::function<matrix(matrix,matrix,matrix)> ff, matrix x0, double c, double dc, double epsilon, int Nmax, matrix ud1 = NAN, matrix ud2 = NAN); // throw (string);
 solution sym_NM(std::function<matrix(matrix,matrix,matrix)> ff, matrix x0, double s, double alpha, double beta, double gamma, double delta, double epsilon, int Nmax, matrix ud1 = NAN, matrix ud2 = NAN); // throw (string);
 
+double find_step_length(matrix x0, matrix direction,
+						std::function<matrix(matrix, matrix, matrix)> ff,
+						matrix ud1, matrix ud2, double epsilon = 1e-6, int Nmax = 1000);
 solution SD(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2, bool h_golden = false);
 solution CG(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2, bool h_golden = false); // throw (string);
 solution Newton(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(matrix, matrix, matrix), matrix (*Hf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2, bool h_golden = false); // throw (string);

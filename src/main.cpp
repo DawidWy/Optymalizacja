@@ -23,6 +23,7 @@ void lab1();
 void lab2();
 void lab3();
 void lab4();
+void lab4_csv();
 void lab5();
 void lab6();
 
@@ -30,7 +31,7 @@ int main()
 {
 	try
 	{
-		lab4();
+		lab4_csv();
 	}
 	catch (string EX_INFO)
 	{
@@ -519,6 +520,271 @@ void lab4()
     // if (f_after(0) >= f_before(0)) {
     //     cout << "UWAGA: Funkcja NIE zmalała!" << endl;
     // }
+}
+
+using traj_t = std::vector<matrix>;
+
+traj_t SD_traj(std::function<matrix(matrix, matrix, matrix)> ff,
+               matrix (*gf)(matrix, matrix, matrix),
+               matrix x0, double h0, double epsilon, int Nmax,
+               matrix ud1, matrix ud2, bool h_golden)
+{
+    traj_t traj;
+    try {
+        solution::clear_calls();
+        matrix x = x0;
+        matrix fx_old = NAN;
+        double h = h0;
+        solution Xopt;
+        Xopt.y = NAN;
+
+        traj.push_back(x);
+
+        do {
+            matrix d = -gf(x, ud1, ud2);
+            solution::g_calls++; 
+            if (h_golden || h == 0) {
+                h = find_step_length(x, d, ff, ud1, ud2, epsilon, Nmax);
+            }
+            x = x + h * d;
+
+            if (solution::g_calls > Nmax || solution::H_calls > Nmax || solution::f_calls > Nmax) {
+                throw std::string("Przekroczono Nmax w SD.");
+            }
+
+            fx_old = Xopt.y;
+            Xopt.x = x;
+            Xopt.fit_fun(ff, ud1, ud2);
+
+            traj.push_back(x);
+
+        } while (fx_old == NAN || norm(Xopt.y - fx_old) > epsilon);
+
+        return traj;
+    }
+    catch (std::string ex) {
+        std::cerr << "SD_traj exception: " << ex << std::endl;
+        return traj;
+    }
+}
+
+traj_t CG_traj(std::function<matrix(matrix, matrix, matrix)> ff,
+               matrix (*gf)(matrix, matrix, matrix),
+               matrix x0, double h0, double epsilon, int Nmax,
+               matrix ud1, matrix ud2, bool h_golden)
+{
+    traj_t traj;
+    try {
+        solution::clear_calls();
+        solution Xopt;
+        Xopt.x = x0;
+        Xopt.fit_fun(ff, ud1, ud2);
+        Xopt.grad(gf, ud1, ud2);
+
+        int n = get_len(x0);
+        int iter = 0;
+        matrix d = -Xopt.g;
+
+        traj.push_back(Xopt.x);
+
+        while (true) {
+            matrix x_old = Xopt.x;
+            matrix g_old = Xopt.g;
+            double f_old = Xopt.y(0);
+
+            double alpha;
+            if (h0 == 0 || h_golden) {
+                alpha = find_step_length(x_old, d, ff, ud1, ud2, 1e-6, 10000);
+                if (alpha < 1e-10) alpha = 1e-4;
+            } else {
+                alpha = h0;
+            }
+
+            Xopt.x = x_old + alpha * d;
+
+            Xopt.grad(gf, ud1, ud2);
+            Xopt.fit_fun(ff, ud1, ud2);
+
+            iter++;
+            traj.push_back(Xopt.x);
+
+            double grad_norm = norm(Xopt.g);
+            if (grad_norm < epsilon) break;
+            if (abs(Xopt.y(0) - f_old) < epsilon) break;
+            if (iter >= Nmax) break;
+            if (solution::g_calls >= Nmax) break;
+
+            double g_old_dot_g_old = 0.0, g_new_dot_g_new = 0.0;
+            for (int i = 0; i < n; ++i) {
+                g_old_dot_g_old += g_old(i) * g_old(i);
+                g_new_dot_g_new += Xopt.g(i) * Xopt.g(i);
+            }
+            double beta = 0.0;
+            if (g_old_dot_g_old > 0) beta = g_new_dot_g_new / g_old_dot_g_old;
+
+            d = -Xopt.g + beta * d;
+
+            double directional_derivative = 0.0;
+            for (int i = 0; i < n; ++i) directional_derivative += Xopt.g(i) * d(i);
+            if (directional_derivative >= 0) d = -Xopt.g;
+            if (iter % n == 0) d = -Xopt.g;
+        }
+
+        return traj;
+    }
+    catch (std::string ex) {
+        std::cerr << "CG_traj exception: " << ex << std::endl;
+        return traj;
+    }
+}
+
+traj_t Newton_traj(std::function<matrix(matrix, matrix, matrix)> ff,
+                   matrix (*gf)(matrix, matrix, matrix),
+                   matrix (*Hf)(matrix, matrix, matrix),
+                   matrix x0, double h0, double epsilon, int Nmax,
+                   matrix ud1, matrix ud2, bool h_golden)
+{
+    traj_t traj;
+    try {
+        solution::clear_calls();
+        matrix x = x0;
+        matrix fx_old = NAN;
+        double h = h0;
+        solution Xopt;
+        Xopt.y = NAN;
+
+        traj.push_back(x);
+
+        do {
+            matrix g = gf(x, ud1, ud2);
+            solution::g_calls++;
+            matrix H = Hf(x, ud1, ud2);
+            solution::H_calls++;
+            matrix d = inv(H) * -g;
+
+            if (h_golden || h == 0) {
+                h = find_step_length(x, d, ff, ud1, ud2, epsilon, Nmax);
+            }
+            x = x + h * d;
+
+            if (solution::g_calls > Nmax || solution::H_calls > Nmax || solution::f_calls > Nmax) {
+                throw std::string("Przekroczono Nmax w Newton.");
+            }
+
+            fx_old = Xopt.y;
+            Xopt.x = x;
+            Xopt.fit_fun(ff, ud1, ud2);
+
+            traj.push_back(x);
+
+        } while (fx_old == NAN || norm(Xopt.y - fx_old) > epsilon);
+
+        return traj;
+    }
+    catch (std::string ex) {
+        std::cerr << "Newton_traj exception: " << ex << std::endl;
+        return traj;
+    }
+}
+
+void save_trajs_to_csv(const std::string &filename,
+                       const traj_t &sd05, const traj_t &sd25, const traj_t &sdg,
+                       const traj_t &cg05, const traj_t &cg25, const traj_t &cgg,
+                       const traj_t &n05, const traj_t &n25, const traj_t &ng)
+{
+    std::ofstream out(filename);
+    if (!out.is_open()) {
+        std::cerr << "Nie mozna otworzyc pliku: " << filename << std::endl;
+        return;
+    }
+
+    out <<
+        "SD_x1_005;SD_x2_005;"
+        "SD_x1_025;SD_x2_025;"
+        "SD_x1_var;SD_x2_var;"
+        "CG_x1_005;CG_x2_005;"
+        "CG_x1_025;CG_x2_025;"
+        "CG_x1_var;CG_x2_var;"
+        "Newton_x1_005;Newton_x2_005;"
+        "Newton_x1_025;Newton_x2_025;"
+        "Newton_x1_var;Newton_x2_var\n";
+
+    size_t max_len = 0;
+    auto update_max = [&](const traj_t &t){ if (t.size() > max_len) max_len = t.size(); };
+    update_max(sd05); update_max(sd25); update_max(sdg);
+    update_max(cg05); update_max(cg25); update_max(cgg);
+    update_max(n05); update_max(n25); update_max(ng);
+
+    for (size_t k = 0; k < max_len; ++k) {
+        std::stringstream row;
+
+        auto write_pair = [&](const traj_t &t){
+            if (k < t.size()) {
+                const matrix &m = t[k];
+                row << m(0) << ";" << m(1) << ";";
+            } else {
+                row << ";" << ";";
+            }
+        };
+
+        // SD
+        write_pair(sd05);
+        write_pair(sd25);
+        write_pair(sdg);
+        // CG
+        write_pair(cg05);
+        write_pair(cg25);
+        write_pair(cgg);
+        // Newton
+        write_pair(n05);
+        write_pair(n25);
+        write_pair(ng);
+
+        std::string s = row.str();
+        out << s << "\n";
+    }
+
+    out.close();
+    std::cout << "Zapisano plik CSV: " << filename << std::endl;
+}
+
+void lab4_csv()
+{
+    double epsilon = 1e-6;
+    int Nmax = 2147483647;
+    matrix ud1 = NAN, ud2 = NAN;
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dist(-2.0, 2.0);
+
+    matrix x0(2,1);
+    x0(0) = dist(gen);
+    x0(1) = dist(gen);
+
+    std::cout << "Start x0: (" << x0(0) << ", " << x0(1) << ")\n";
+
+    traj_t sd05 = SD_traj(ff4T, gf4T, x0, 0.05, epsilon, Nmax, ud1, ud2, false);
+    solution::clear_calls();
+    traj_t sd25 = SD_traj(ff4T, gf4T, x0, 0.25, epsilon, Nmax, ud1, ud2, false);
+    solution::clear_calls();
+    traj_t sdg  = SD_traj(ff4T, gf4T, x0, 0.0,  epsilon, Nmax, ud1, ud2, true);
+
+    solution::clear_calls();
+    traj_t cg05 = CG_traj(ff4T, gf4T, x0, 0.05, epsilon, Nmax, ud1, ud2, false);
+    solution::clear_calls();
+    traj_t cg25 = CG_traj(ff4T, gf4T, x0, 0.25, epsilon, Nmax, ud1, ud2, false);
+    solution::clear_calls();
+    traj_t cgg  = CG_traj(ff4T, gf4T, x0, 0.0,  epsilon, Nmax, ud1, ud2, true);
+
+    solution::clear_calls();
+    traj_t n05 = Newton_traj(ff4T, gf4T, hf4T, x0, 0.05, epsilon, Nmax, ud1, ud2, false);
+    solution::clear_calls();
+    traj_t n25 = Newton_traj(ff4T, gf4T, hf4T, x0, 0.25, epsilon, Nmax, ud1, ud2, false);
+    solution::clear_calls();
+    traj_t ng  = Newton_traj(ff4T, gf4T, hf4T, x0, 0.0,  epsilon, Nmax, ud1, ud2, true);
+
+    save_trajs_to_csv("lab4_wykresy.csv", sd05, sd25, sdg, cg05, cg25, cgg, n05, n25, ng);
+
 }
 
 void lab5()
