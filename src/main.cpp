@@ -414,10 +414,13 @@ void lab4()
 	matrix ud1 = NAN;
 	matrix ud2 = NAN;
 	bool h_golden = false;
-	const std::vector<std::string> headersT = {"x1(0)","x2(0)", "SD_x1", "SD_x2", "SD_y", "SD_f_calls", "SD_g_calls", "SD_minimum"
-	"CG_x1","CG_x2","CG_y","CG_f_calls","CG_g_calls","CG_minimum",
-"N_x1","N_x2","N_y","N_f_calls","N_g_calls","N_H_calls","N_minimum"};
-CSVStream Sout("symulacja_lab4T.csv",headersT);
+        const std::vector<std::string> headersT = {
+            "x1(0)",      "x2(0)",      "SD_x1",      "SD_x2",      "SD_y",
+            "SD_f_calls", "SD_g_calls", "SD_minimum", "CG_x1",      "CG_x2",
+            "CG_y",       "CG_f_calls", "CG_g_calls", "CG_minimum", "N_x1",
+            "N_x2",       "N_y",        "N_f_calls",  "N_g_calls",  "N_H_calls",
+            "N_minimum"};
+        CSVStream Sout("symulacja_lab4T.csv", headersT);
 	for (int i = 0; i < 3; i++) {
 		if (i == 0) h0 = 0.05;
 		else if (i == 1) h0 = 0.25;
@@ -437,7 +440,7 @@ CSVStream Sout("symulacja_lab4T.csv",headersT);
 			grad_result = CG(ff4T, gf4T, x0, h0, epsilon, Nmax, ud1, ud2, h_golden);
 			is_global = (abs(grad_result.x(0)) < 0.5 && abs(grad_result.x(1))
 			 < 0.5 && grad_result.y(0) < 0.1);
-			Sout << x0(0) << x0(1) << grad_result.x(0) << grad_result.x(1)
+			Sout << grad_result.x(0) << grad_result.x(1)
 			<< grad_result.y(0) << solution::f_calls << solution::g_calls << (is_global ? "Tak" : "Nie");
 			//cout<<i<<"   "<<j<<"   "<<"\n";
 
@@ -445,7 +448,7 @@ CSVStream Sout("symulacja_lab4T.csv",headersT);
 			grad_result = Newton(ff4T, gf4T, hf4T, x0, h0, epsilon, Nmax, ud1, ud2, h_golden);
 			is_global = (abs(grad_result.x(0)) < 0.5 && abs(grad_result.x(1))
 			 < 0.5 && grad_result.y(0) < 0.1);
-			Sout << x0(0) << x0(1) << grad_result.x(0) << grad_result.x(1)
+			Sout << grad_result.x(0) << grad_result.x(1)
 			<< grad_result.y(0) << solution::f_calls << solution::g_calls << solution::H_calls << (is_global ? "Tak" : "Nie");
 			//cout<<i<<"   "<<j<<"   "<<"\n";
 			solution::clear_calls();
