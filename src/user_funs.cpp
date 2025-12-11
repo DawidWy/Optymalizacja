@@ -338,7 +338,6 @@ matrix gf4T(matrix x, matrix ud1, matrix ud2)
 	g(1) = 2.0 * x2 + x1;
 	return g;
 }
-<<<<<<< HEAD
 matrix hf4T(matrix x, matrix ud1, matrix ud2)
 {
 	matrix H(2, 2);
@@ -350,8 +349,6 @@ matrix hf4T(matrix x, matrix ud1, matrix ud2)
 	H(1, 1) = 2.0;
 	return H;
 }
-=======
->>>>>>> 123ae6f3ba3fbbd66bb58138ec8458285f25c125
 
 double sigmoid(double z) {
     return 1.0 / (1.0 + exp(-z));
@@ -437,8 +434,4 @@ matrix gf4R(matrix theta, matrix X, matrix Y) {
     catch (string ex_info) {
         throw ("matrix gf4R(...):\n" + ex_info);
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 123ae6f3ba3fbbd66bb58138ec8458285f25c125

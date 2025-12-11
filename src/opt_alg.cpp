@@ -853,7 +853,7 @@ solution SD(std::function<matrix(matrix, matrix, matrix)> ff, matrix (*gf)(matri
 solution CG(std::function<matrix(matrix, matrix, matrix)> ff, 
 			matrix (*gf)(matrix, matrix, matrix), 
 			matrix x0, double h0, double epsilon, int Nmax, 
-			matrix ud1, matrix ud2) {
+			matrix ud1, matrix ud2, bool h_golden) {
 	try {
 		solution Xopt;
 		solution::clear_calls();
@@ -873,7 +873,7 @@ solution CG(std::function<matrix(matrix, matrix, matrix)> ff,
 			
 			// Znajdź długość kroku
 			double alpha;
-			if (h0 == 0) {
+			if (h0 == 0 || h_golden) {
 				// Użyj metody złotego podziału do znalezienia optymalnego kroku
 				alpha = find_step_length(x_old, d, ff, ud1, ud2, 1e-6, 10000);
 				

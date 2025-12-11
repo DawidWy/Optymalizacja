@@ -408,7 +408,7 @@ void lab4()
 	std::random_device rd;
 	std::mt19937 gen(rd());
 	std::uniform_real_distribution<> x0_dist(-2,2);
-	std::ofstream Sout("symulacja_lab4.csv");
+	std::ofstream Sout("symulacja_lab4T.csv");
 	solution grad_result;
 	std::stringstream result;
 	matrix ud1 = NAN;
