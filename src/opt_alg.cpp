@@ -752,7 +752,7 @@ solution pen(std::function<matrix(matrix, matrix, matrix)> ff, matrix x0, double
 
 double find_step_length(matrix x0, matrix direction,
 						std::function<matrix(matrix, matrix, matrix)> ff,
-						matrix ud1, matrix ud2, double epsilon = 1e-6, int Nmax = 1000) {
+						matrix ud1, matrix ud2, double epsilon, int Nmax) {
 
   // Funkcja jednej zmiennej alpha
   auto line_func = [x0, direction, ff, ud1, ud2](double alpha) -> double {
