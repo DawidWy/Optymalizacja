@@ -31,7 +31,7 @@ int main()
 {
 	try
 	{
-		lab4();
+		lab4_csv();
 	}
 	catch (string EX_INFO)
 	{
@@ -493,41 +493,88 @@ traj_t SD_traj(std::function<matrix(matrix, matrix, matrix)> ff,
                matrix ud1, matrix ud2, bool h_golden)
 {
     traj_t traj;
-    try {
+    try
+    {
+        solution Xopt;
         solution::clear_calls();
         matrix x = x0;
-        matrix fx_old = NAN;
-        double h = h0;
-        solution Xopt;
-        Xopt.y = NAN;
-
-        traj.push_back(x);
-
-        do {
-            matrix d = -gf(x, ud1, ud2);
-            solution::g_calls++; 
-            if (h_golden || h == 0) {
+        int iter = 0;
+        double fy_old = NAN;
+		traj.push_back(x);
+        while (true)
+        {
+            matrix grad = gf(x, ud1, ud2);
+            solution::g_calls++;
+            
+            // Warunek stopu - norma gradientu
+            double grad_norm = norm(grad);
+            if (grad_norm < epsilon) {
+                break;
+            }
+            
+            // Kierunek najszybszego spadku
+            matrix d = -grad;
+            
+            // Określenie długości kroku
+            double h;
+            if (h_golden || h0 == 0) {
+                // Użyj metody złotego podziału do znalezienia optymalnego kroku
                 h = find_step_length(x, d, ff, ud1, ud2, epsilon, Nmax);
+            } else {
+                // Użyj stałego kroku
+                h = h0;
             }
+            
+            // Zapamiętaj poprzedni punkt i wartość funkcji
+            matrix x_old = x;
+            
+            // Oblicz nową wartość funkcji w starym punkcie
+            matrix f_old_mat = ff(x, ud1, ud2);
+            double f_old = m2d(f_old_mat);
+            solution::f_calls++;
+            
+            // Wykonaj krok
             x = x + h * d;
-
-            if (solution::g_calls > Nmax || solution::H_calls > Nmax || solution::f_calls > Nmax) {
-                throw std::string("Przekroczono Nmax w SD.");
+			traj.push_back(x);
+            
+            // Oblicz nową wartość funkcji
+            matrix f_new_mat = ff(x, ud1, ud2);
+            double f_new = m2d(f_new_mat);
+            solution::f_calls++;
+            
+            // Sprawdź zmianę w x
+            double x_change = norm(x - x_old);
+            
+            // Sprawdź zmianę wartości funkcji
+            double f_change = abs(f_new - f_old);
+            
+            iter++;
+            
+            // Warunki stopu
+            if (x_change < epsilon || f_change < epsilon) {
+                break;
             }
-
-            fx_old = Xopt.y;
-            Xopt.x = x;
-            Xopt.fit_fun(ff, ud1, ud2);
-
-            traj.push_back(x);
-
-        } while (fx_old == NAN || norm(Xopt.y - fx_old) > epsilon);
-
+            
+            // Sprawdzenie maksymalnej liczby wywołań
+            if (solution::g_calls > Nmax || solution::f_calls > Nmax) {
+                throw std::string("Przekroczono maksymalną liczbę wywołań w metodzie najszybszego spadku.");
+            }
+            
+            // Maksymalna liczba iteracji
+            if (iter > Nmax) {
+                throw std::string("Przekroczono maksymalną liczbę iteracji w metodzie najszybszego spadku.");
+            }
+        }
+        
+        Xopt.x = x;
+        Xopt.y = ff(x, ud1, ud2);
+        solution::f_calls++;
+        
         return traj;
     }
-    catch (std::string ex) {
-        std::cerr << "SD_traj exception: " << ex << std::endl;
-        return traj;
+	catch (string ex_info)
+    {
+        throw("solution SD(...):\n" + ex_info);
     }
 }
 
@@ -608,40 +655,85 @@ traj_t Newton_traj(std::function<matrix(matrix, matrix, matrix)> ff,
                    matrix ud1, matrix ud2, bool h_golden)
 {
     traj_t traj;
-    try {
+    try
+    {
+        solution Xopt;
         solution::clear_calls();
         matrix x = x0;
-        matrix fx_old = NAN;
-        double h = h0;
-        solution Xopt;
-        Xopt.y = NAN;
-
+        int iter = 0;
         traj.push_back(x);
-
-        do {
+        while (true)
+        {
+            // Oblicz gradient i hesjan
             matrix g = gf(x, ud1, ud2);
-            solution::g_calls++;
+            Xopt.g_calls++;
             matrix H = Hf(x, ud1, ud2);
-            solution::H_calls++;
-            matrix d = inv(H) * -g;
-
-            if (h_golden || h == 0) {
+            Xopt.H_calls++;
+            
+            // Sprawdź warunek stopu - norma gradientu
+            double grad_norm = norm(g);
+            if (grad_norm < epsilon) {
+                break;
+            }
+            
+            // Rozwiąż układ H * d = -g (kierunek Newtona)
+            matrix d = -inv(H) * g;
+            
+            // Określenie długości kroku
+            double h;
+            if (h_golden || h0 == 0) {
+                // Użyj metody złotego podziału do znalezienia optymalnego kroku
                 h = find_step_length(x, d, ff, ud1, ud2, epsilon, Nmax);
+            } else {
+                // Użyj stałego kroku (zwykle 1 dla metody Newtona)
+                h = h0;
             }
+            
+            // Zapamiętaj poprzedni punkt
+            matrix x_old = x;
+            
+            // Oblicz wartość funkcji w starym punkcie
+            matrix f_old_mat = ff(x, ud1, ud2);
+            solution::f_calls++;
+            double f_old = m2d(f_old_mat);
+            
+            // Wykonaj krok
             x = x + h * d;
-
-            if (solution::g_calls > Nmax || solution::H_calls > Nmax || solution::f_calls > Nmax) {
-                throw std::string("Przekroczono Nmax w Newton.");
+			traj.push_back(x);
+            
+            // Oblicz nową wartość funkcji
+            matrix f_new_mat = ff(x, ud1, ud2);
+            solution::f_calls++;
+            double f_new = m2d(f_new_mat);
+            
+            // Sprawdź zmianę w x
+            double x_change = norm(x - x_old);
+            
+            // Sprawdź zmianę wartości funkcji
+            double f_change = abs(f_new - f_old);
+            
+            iter++;
+            
+            // Warunki stopu
+            if (x_change < epsilon || f_change < epsilon) {
+                break;
             }
-
-            fx_old = Xopt.y;
-            Xopt.x = x;
-            Xopt.fit_fun(ff, ud1, ud2);
-
-            traj.push_back(x);
-
-        } while (fx_old == NAN || norm(Xopt.y - fx_old) > epsilon);
-
+            
+            // Sprawdzenie maksymalnej liczby wywołań
+            if (solution::g_calls > Nmax || solution::H_calls > Nmax || solution::f_calls > Nmax) {
+                throw std::string("Przekroczono maksymalną liczbę wywołań w metodzie Newtona.");
+            }
+            
+            // Maksymalna liczba iteracji
+            if (iter > Nmax) {
+                throw std::string("Przekroczono maksymalną liczbę iteracji w metodzie Newtona.");
+            }
+        }
+        
+        Xopt.x = x;
+        Xopt.y = ff(x, ud1, ud2);
+        solution::f_calls++;
+        
         return traj;
     }
     catch (std::string ex) {
