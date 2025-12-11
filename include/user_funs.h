@@ -3,6 +3,11 @@
 #include"ode_solver.h"
 
 const double g = 9.80665;
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
+
 matrix ff0T(matrix, matrix = NAN, matrix = NAN);
 matrix ff0R(matrix, matrix = NAN, matrix = NAN);
 matrix df0(double, matrix, matrix = NAN, matrix = NAN);
@@ -17,5 +22,7 @@ matrix ff3T_outside(matrix x, matrix ud1, matrix ud2);
 matrix ff3T_inside(matrix x, matrix ud1, matrix ud2);
 matrix ff3R(matrix x, matrix ud1);
 matrix ff4T(matrix x, matrix ud1, matrix ud2);
+matrix gf4T(matrix x, matrix ud1, matrix ud2);
 matrix gf4R(matrix theta, matrix X, matrix Y);
 matrix hf4R(matrix theta, matrix X, matrix Y);
+matrix hf4T(matrix x, matrix ud1, matrix ud2);

@@ -8,6 +8,7 @@
 #include"user_funs.h"
 #include <algorithm>
 
+#define M_PI 3.14159265358979323846
 
 matrix ff0T(matrix x, matrix ud1, matrix ud2)				// funkcja celu dla przypadku testowego
 {
@@ -320,11 +321,33 @@ matrix ff3R(matrix x, matrix ud1) {
     
     return -x_end + penalty;
 }
+
 matrix ff4T(matrix x, matrix ud1, matrix ud2){
     double x1 = x(0);
 	double x2 = x(1);
-	matrix result = 1/6 * pow(x1, 6) - 1.05 * pow(x1, 4) + 2 * pow(x1, 2) + pow(x2, 2) + x1*x2;
+    matrix result = (1.0/6.0) * pow(x1, 6) - 1.05 * pow(x1, 4) + 2.0 * pow(x1, 2) + pow(x2, 2) + x1 * x2;
 	return result;
+}
+
+matrix gf4T(matrix x, matrix ud1, matrix ud2)
+{
+	matrix g(2, 1);
+	double x1 = x(0);
+	double x2 = x(1);
+	g(0) = pow(x1, 5) - 4.2 * pow(x1, 3) + 4.0 * x1 + x2;
+	g(1) = 2.0 * x2 + x1;
+	return g;
+}
+matrix hf4T(matrix x, matrix ud1, matrix ud2)
+{
+	matrix H(2, 2);
+	double x1 = x(0);
+	double x2 = x(1);
+	H(0, 0) = 5.0 * pow(x1, 4) - 12.6 * pow(x1, 2) + 4.0;
+	H(0, 1) = 1.0;
+	H(1, 0) = 1.0;
+	H(1, 1) = 2.0;
+	return H;
 }
 
 double sigmoid(double z) {
