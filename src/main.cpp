@@ -31,7 +31,7 @@ int main()
 {
 	try
 	{
-		lab4_csv();
+		lab4();
 	}
 	catch (string EX_INFO)
 	{
@@ -79,7 +79,7 @@ void lab0()
 void lab1()
 {
 
-	CSVStream Sout("symulacja_lab1.csv", ',', {"x0", "x_L", "x_H", "fib_wynik.x", "fib_wynik.y", "fib_wynik.f_calls", "fib_wynik.flag", "lag_wynik.x", "lag_wynik.y", "lag_wynik.f_calls", "lag_wynik.flag"});
+	CSVStream Sout("symulacja_lab1.csv", {"x0", "x_L", "x_H", "fib_wynik.x", "fib_wynik.y", "fib_wynik.f_calls", "fib_wynik.flag", "lag_wynik.x", "lag_wynik.y", "lag_wynik.f_calls", "lag_wynik.flag"}, ',');
 	// Sout << fixed;
 	// cout << fixed;
 	// Problem teoretyczny
@@ -144,7 +144,7 @@ void lab1()
 void lab2()
 {
 	srand(time(NULL));
-	CSVStream Sout("symulacja_lab2.csv", ',', {"i","a","b","x0","x1","y","calls","czy_global"});
+	CSVStream Sout("symulacja_lab2.csv", {"i","a","b","x0","x1","y","calls","czy_global"},',');
 	matrix X;
 	double step = 0.01, alpha = 0.8, beta = 0.1, epsilon = 0.0001;
 	double a, b;
@@ -188,7 +188,7 @@ void lab2()
 	auto Y = solve_ode(lab2dY, t0, dt, tend, Y0, k_opt, NAN);
 	int n = get_len(Y.first);
 
-	CSVStream Sram("symulacja_lab2_ramie.csv",',',{"t","alpha","omega","M"});
+	CSVStream Sram("symulacja_lab2_ramie.csv",{"t","alpha","omega","M"},',');
 
 	const double mr = 1.0;
 	const double mc = 5.0;
@@ -409,16 +409,15 @@ void lab4()
 	std::random_device rd;
 	std::mt19937 gen(rd());
 	std::uniform_real_distribution<> x0_dist(-2,2);
-	std::ofstream Sout("symulacja_lab4T.csv");
 	solution grad_result;
-	std::stringstream result;
+	//std::stringstream result;
 	matrix ud1 = NAN;
 	matrix ud2 = NAN;
 	bool h_golden = false;
-	Sout << "x1(0);x2(0);"
-         << "SD_x1;SD_x2;SD_y;SD_f_calls;SD_g_calls;SD_minimum;"
-         << "CG_x1;CG_x2;CG_y;CG_f_calls;CG_g_calls;CG_minimum;"
-         << "N_x1;N_x2;N_y;N_f_calls;N_g_calls;N_H_calls;N_minimum;\n";
+	const std::vector<std::string> headersT = {"x1(0)","x2(0)", "SD_x1", "SD_x2", "SD_y", "SD_f_calls", "SD_g_calls", "SD_minimum"
+	"CG_x1","CG_x2","CG_y","CG_f_calls","CG_g_calls","CG_minimum",
+"N_x1","N_x2","N_y","N_f_calls","N_g_calls","N_H_calls","N_minimum"};
+CSVStream Sout("symulacja_lab4T.csv",headersT);
 	for (int i = 0; i < 3; i++) {
 		if (i == 0) h0 = 0.05;
 		else if (i == 1) h0 = 0.25;
@@ -430,96 +429,57 @@ void lab4()
 			grad_result = SD(ff4T, gf4T, x0, h0, epsilon, Nmax, ud1, ud2, h_golden);
 			bool is_global = (abs(grad_result.x(0)) < 0.5 && abs(grad_result.x(1))
 			 < 0.5 && grad_result.y(0) < 0.1);
-			result<<x0(0)<<";"<<x0(1)<<";"<<grad_result.x(0)<<";"<<grad_result.x(1)
-			<<";"<<grad_result.y<<";"<<grad_result.f_calls<<grad_result.g_calls;
-			if (is_global) result << ";Tak;";
-			else result << ";Nie;";
-			cout<<i<<"   "<<j<<"   "<<"\n";
+			Sout << x0(0) << x0(1) << grad_result.x(0) << grad_result.x(1)
+			<< grad_result.y(0) << solution::f_calls << solution::g_calls << (is_global ? "Tak" : "Nie");
+			//cout<<i<<"   "<<j<<"   "<<"\n";
+
 			solution::clear_calls();
 			grad_result = CG(ff4T, gf4T, x0, h0, epsilon, Nmax, ud1, ud2, h_golden);
 			is_global = (abs(grad_result.x(0)) < 0.5 && abs(grad_result.x(1))
 			 < 0.5 && grad_result.y(0) < 0.1);
-			result<<x0(0)<<";"<<x0(1)<<";"<<grad_result.x(0)<<";"<<grad_result.x(1)
-			<<";"<<grad_result.y<<";"<<solution::f_calls<<solution::g_calls;
-			if (is_global) result << ";Tak;";
-			else result << ";Nie;";
-			cout<<i<<"   "<<j<<"   "<<"\n";
+			Sout << x0(0) << x0(1) << grad_result.x(0) << grad_result.x(1)
+			<< grad_result.y(0) << solution::f_calls << solution::g_calls << (is_global ? "Tak" : "Nie");
+			//cout<<i<<"   "<<j<<"   "<<"\n";
+
 			solution::clear_calls();
 			grad_result = Newton(ff4T, gf4T, hf4T, x0, h0, epsilon, Nmax, ud1, ud2, h_golden);
 			is_global = (abs(grad_result.x(0)) < 0.5 && abs(grad_result.x(1))
 			 < 0.5 && grad_result.y(0) < 0.1);
-			result<<x0(0)<<";"<<x0(1)<<";"<<grad_result.x(0)<<";"<<grad_result.x(1)
-			<<";"<<grad_result.y<<";"<<solution::f_calls<<solution::g_calls<<";"
-			<<solution::H_calls;
-			if (is_global) result << ";Tak\n";
-			else result << ";Nie\n";
-			cout<<i<<"   "<<j<<"   "<<"\n";
+			Sout << x0(0) << x0(1) << grad_result.x(0) << grad_result.x(1)
+			<< grad_result.y(0) << solution::f_calls << solution::g_calls << solution::H_calls << (is_global ? "Tak" : "Nie");
+			//cout<<i<<"   "<<j<<"   "<<"\n";
 			solution::clear_calls();
 		}}
-	Sout<<result.str();
-	Sout.close();
-
-	matrix X, Y;
-    load_data("XData.txt", "YData.txt", X, Y);
-	std::ofstream Rout("symulacjaR_lab4.csv");
-	
-	epsilon = 1e-6;
-
-	//Parametry theta
-	matrix theta0(3, 1);
-    theta0(0) = 0;
-    theta0(1) = 0;
-    theta0(2) = 0;
-
-	// Początkowy koszt
-    matrix initial_cost = hf4R(theta0, X, Y);
-	
-	solution::g_calls=0;
-	solution res = CG(hf4R, gf4R, theta0, 0, 1e-14, 10000, X, Y);
-	Rout << res.x(0) << ";" << res.x(1) << ";" << res.x(2) << ";" << m2d(hf4R(res.x, X, Y)) << ";" << calculate_accuracy_percentage(res.x, X, Y) << ";" << solution::g_calls << "\n";
-
-	solution::g_calls=0;
-	res = CG(hf4R, gf4R, theta0, 0.001, 1e-14, 10000, X, Y);
-	Rout << res.x(0) << ";" << res.x(1) << ";" << res.x(2) << ";" << m2d(hf4R(res.x, X, Y)) << ";" << calculate_accuracy_percentage(res.x, X, Y) << ";" << solution::g_calls << "\n";
-
-	solution::g_calls=0;
-	res = CG(hf4R, gf4R, theta0, 0.0001, 1e-14, 10000, X, Y);
-	Rout << res.x(0) << ";" << res.x(1) << ";" << res.x(2) << ";" << m2d(hf4R(res.x, X, Y)) << ";" << calculate_accuracy_percentage(res.x, X, Y) << ";" << solution::g_calls << "\n";
-
-	Rout.close();
+	// Sout.close();
 
 	// matrix X, Y;
     // load_data("XData.txt", "YData.txt", X, Y);
-    
-    // matrix theta0(3, 1);
+	// CSVStream Rout("symulacjaR_lab4.csv");
+	
+	// epsilon = 1e-6;
+
+	// //Parametry theta
+	// matrix theta0(3, 1);
     // theta0(0) = 0;
     // theta0(1) = 0;
     // theta0(2) = 0;
-    
-    // // Oblicz gradient w punkcie startowym
-    // matrix grad = gf4R(theta0, X, Y);
-    // matrix direction = -grad;  // kierunek najszybszego spadku
-    
-    // cout << "Gradient w (0,0,0): [" << grad(0) << ", " << grad(1) << ", " << grad(2) << "]" << endl;
-    
-    // // Test find_step_length
-    // double alpha = find_step_length(theta0, direction, hf4R, X, Y);
-    
-    // cout << "Znaleziony krok: " << alpha << endl;
-    
-    // // Sprawdź wartość funkcji przed i po
-    // matrix f_before = hf4R(theta0, X, Y);
-    // matrix theta_new = theta0 + alpha * direction;
-    // matrix f_after = hf4R(theta_new, X, Y);
-    
-    // cout << "f(θ0) = " << f_before(0) << endl;
-    // cout << "f(θ0 + α*d) = " << f_after(0) << endl;
-    // cout << "Różnica: " << f_before(0) - f_after(0) << endl;
-    
-    // // Powinno być: f_after < f_before
-    // if (f_after(0) >= f_before(0)) {
-    //     cout << "UWAGA: Funkcja NIE zmalała!" << endl;
-    // }
+
+	// // Początkowy koszt
+    // matrix initial_cost = hf4R(theta0, X, Y);
+	
+	// solution::g_calls=0;
+	// solution res = CG(hf4R, gf4R, theta0, 0, 1e-14, 10000, X, Y);
+	// Rout << res.x(0) << res.x(1) << res.x(2) << m2d(hf4R(res.x, X, Y)) << calculate_accuracy_percentage(res.x, X, Y) << solution::g_calls << "\n";
+
+	// solution::g_calls=0;
+	// res = CG(hf4R, gf4R, theta0, 0.001, 1e-14, 10000, X, Y);
+	// Rout << res.x(0) << res.x(1) << res.x(2) << m2d(hf4R(res.x, X, Y)) << calculate_accuracy_percentage(res.x, X, Y) << solution::g_calls << "\n";
+
+	// solution::g_calls=0;
+	// res = CG(hf4R, gf4R, theta0, 0.0001, 1e-14, 10000, X, Y);
+	// Rout << res.x(0) << res.x(1) << res.x(2) << m2d(hf4R(res.x, X, Y)) << calculate_accuracy_percentage(res.x, X, Y) << solution::g_calls << "\n";
+
+	
 }
 
 using traj_t = std::vector<matrix>;

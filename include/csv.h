@@ -15,7 +15,7 @@ public:
     int current_column = 0;
 
 
-    CSVStream(const std::string &filename, char sep = ',', const std::vector<std::string> &headers = {});
+    CSVStream(const std::string &filename, const std::vector<std::string> &headers, char sep = ',');
     ~CSVStream();
 
     template <typename T>

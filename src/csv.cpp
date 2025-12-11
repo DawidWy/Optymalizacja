@@ -1,6 +1,6 @@
 #include "csv.h"
 
-CSVStream::CSVStream(const std::string &filename, char sep, const std::vector<std::string> &headers) : separator(sep)
+CSVStream::CSVStream(const std::string &filename, const std::vector<std::string> &headers, char sep) : separator(sep)
 {
     file.open(filename);
     if (!file.is_open())
