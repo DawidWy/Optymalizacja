@@ -31,7 +31,8 @@ int main()
 {
 	try
 	{
-		lab4_csv();
+        lab4();
+		//lab4_csv();
 	}
 	catch (string EX_INFO)
 	{
@@ -676,8 +677,23 @@ traj_t Newton_traj(std::function<matrix(matrix, matrix, matrix)> ff,
                 break;
             }
             
-            // Rozwiąż układ H * d = -g (kierunek Newtona)
-            matrix d = -inv(H) * g;
+            // Oblicz kierunek Newtona: d = -inv(H) * g
+            matrix d;
+            try {
+                // Spróbuj obliczyć kierunek Newtona
+                d = -inv(H) * g;
+                
+                // Sprawdź czy kierunek jest kierunkiem spadku
+                // Jeśli g^T * d >= 0, to kierunek nie jest kierunkiem spadku
+                matrix gT_d = trans(g) * d;
+                if (m2d(gT_d) >= 0) {
+                    // Użyj kierunku gradientu zamiast Newtona
+                    d = -g;
+                }
+            } catch (string) {
+                // Jeśli obliczenie odwrotności się nie powiodło, użyj gradientu
+                d = -g;
+            }
             
             // Określenie długości kroku
             double h;

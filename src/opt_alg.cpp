@@ -1027,6 +1027,7 @@ solution Newton(std::function<matrix(matrix, matrix, matrix)> ff,
         solution::clear_calls();
         matrix x = x0;
         int iter = 0;
+        double f_old, f_new;
         
         while (true)
         {
@@ -1042,8 +1043,23 @@ solution Newton(std::function<matrix(matrix, matrix, matrix)> ff,
                 break;
             }
             
-            // Rozwiąż układ H * d = -g (kierunek Newtona)
-            matrix d = -inv(H) * g;
+            // Oblicz kierunek Newtona: d = -inv(H) * g
+            matrix d;
+            try {
+                // Spróbuj obliczyć kierunek Newtona
+                d = -inv(H) * g;
+                
+                // Sprawdź czy kierunek jest kierunkiem spadku
+                // Jeśli g^T * d >= 0, to kierunek nie jest kierunkiem spadku
+                matrix gT_d = trans(g) * d;
+                if (m2d(gT_d) >= 0) {
+                    // Użyj kierunku gradientu zamiast Newtona
+                    d = -g;
+                }
+            } catch (string) {
+                // Jeśli obliczenie odwrotności się nie powiodło, użyj gradientu
+                d = -g;
+            }
             
             // Określenie długości kroku
             double h;
@@ -1055,21 +1071,27 @@ solution Newton(std::function<matrix(matrix, matrix, matrix)> ff,
                 h = h0;
             }
             
-            // Zapamiętaj poprzedni punkt
+            // Zapamiętaj poprzedni punkt i wartość funkcji
             matrix x_old = x;
-            
-            // Oblicz wartość funkcji w starym punkcie
             matrix f_old_mat = ff(x, ud1, ud2);
-            solution::f_calls++;
-            double f_old = m2d(f_old_mat);
+            f_old = m2d(f_old_mat);
             
             // Wykonaj krok
             x = x + h * d;
             
             // Oblicz nową wartość funkcji
             matrix f_new_mat = ff(x, ud1, ud2);
-            solution::f_calls++;
-            double f_new = m2d(f_new_mat);
+            f_new = m2d(f_new_mat);
+            
+            // Sprawdź, czy wartość funkcji maleje
+            // Jeśli nie maleje, zmniejsz krok i spróbuj ponownie
+            if (f_new > f_old && h_golden) {
+                // Spróbuj z mniejszym krokiem
+                h = h / 2.0;
+                x = x_old + h * d;
+                f_new_mat = ff(x, ud1, ud2);
+                f_new = m2d(f_new_mat);
+            }
             
             // Sprawdź zmianę w x
             double x_change = norm(x - x_old);
@@ -1097,7 +1119,6 @@ solution Newton(std::function<matrix(matrix, matrix, matrix)> ff,
         
         Xopt.x = x;
         Xopt.y = ff(x, ud1, ud2);
-        solution::f_calls++;
         
         return Xopt;
     }
