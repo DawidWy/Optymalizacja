@@ -1177,130 +1177,223 @@ solution golden(std::function<matrix(matrix, matrix, matrix)> ff, double a, doub
 	}
 }
 
+// Funkcja pomocnicza do znajdowania przedziału z zabezpieczeniami
+std::pair<double, double> find_bracket(std::function<double(double)> f, double start = 0.0, double initial_step = 0.01) {
+    double a = start;
+    double fa = f(a);
+    
+    // Sprawdź, czy funkcja zwraca NaN
+    if (std::isnan(fa)) {
+        return {0.0, 0.0};
+    }
+    
+    // Szukaj w obu kierunkach
+    double b = a + initial_step;
+    double fb = f(b);
+    
+    // Jeśli funkcja rośnie w prawo, spróbuj w lewo
+    if (fb > fa) {
+        b = a - initial_step;
+        fb = f(b);
+    }
+    
+    // Jeśli nadal rośnie, przedział jest wąski
+    if (fb > fa || std::isnan(fb)) {
+        return {a - initial_step, a + initial_step};
+    }
+    
+    // Rozszerzaj przedział w kierunku spadku funkcji, ale z ograniczeniami
+    double c = b;
+    double fc = fb;
+    double factor = 2.0;
+    int max_expansions = 10; // Maksymalnie 10 rozszerzeń
+    
+    for (int i = 0; i < max_expansions; ++i) {
+        double prev_c = c;
+        c = b + factor * (b - a);
+        
+        // Ogranicz maksymalną wartość c
+        if (abs(c) > 1000.0) {
+            c = (c > 0) ? 1000.0 : -1000.0;
+        }
+        
+        fc = f(c);
+        
+        // Jeśli fc jest NaN lub funkcja zaczyna rosnąć, zatrzymaj
+        if (std::isnan(fc) || fc > fb) {
+            c = prev_c; // Wróć do poprzedniej wartości
+            break;
+        }
+        
+        // Aktualizuj a, b
+        a = b;
+        fa = fb;
+        b = c;
+        fb = fc;
+        
+        factor *= 2.0;
+    }
+    
+    // Upewnij się, że a < c
+    if (a > c) std::swap(a, c);
+    
+    // Jeśli przedział jest zbyt mały, rozszerz
+    if (abs(c - a) < 1e-6) {
+        a = start - 1.0;
+        c = start + 1.0;
+    }
+    
+    return {a, c};
+}
+
 solution Powell(std::function<matrix(matrix, matrix, matrix)> ff, matrix x0, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
     try
     {
         solution Xopt;
-        int n = get_len(x0); // wymiar problemu
+        int n = get_len(x0);
         
-        // 1: i = 0
-        int i = 0;
-        
-        // 2: d_j^(0) = e^j, j = 1, 2, …, n
+        // Inicjalizacja kierunków
         matrix* d = new matrix[n];
         for (int j = 0; j < n; ++j) {
             d[j] = matrix(n, 1, 0.0);
-            d[j](j, 0) = 1.0; // wektor jednostkowy e^j
+            d[j](j, 0) = 1.0;
         }
         
-        // Inicjalizacja punktu bieżącego
         matrix x = x0;
+        double f_val = m2d(ff(x, ud1, ud2));
+        solution::f_calls++;
         
-        // Główna pętla
-        while (true) {
-            // 4: p0(i) = x(i)
-            matrix p0 = x;
+        int iter = 0;
+        const int max_iter = 200;
+        bool converged = false;
+        
+        while (!converged && iter < max_iter && solution::f_calls < Nmax) {
+            matrix x_start = x;
+            double f_start = f_val;
             
-            // Tablica punktów pj
-            matrix* p = new matrix[n + 1];
-            p[0] = p0;
-            
-            // 5-8: Minimalizacja wzdłuż każdego kierunku
-            for (int j = 1; j <= n; ++j) {
-                // 6: wyznacz hj(i) - optymalny krok w kierunku d[j-1]
-                auto line_func = [p, d, j, ff, ud1, ud2](matrix alpha_mat, matrix, matrix) -> matrix {
-                    double alpha = alpha_mat(0, 0);
-                    // pj-1 + alpha * d_j
-                    matrix new_point = p[j-1] + alpha * d[j-1];
-                    return ff(new_point, ud1, ud2);
+            // 1. Minimalizacja wzdłuż każdego kierunku
+            for (int j = 0; j < n; ++j) {
+                // Utwórz funkcję jednowymiarową z zabezpieczeniem przed NaN
+                auto line_func_scalar = [x, d, j, ff, ud1, ud2](double alpha) -> double {
+                    matrix x_new = x + alpha * d[j];
+                    matrix result = ff(x_new, ud1, ud2);
+                    double val = m2d(result);
+                    
+                    // Jeśli NaN, zwróć bardzo dużą wartość
+                    if (std::isnan(val)) {
+                        return 1e100;
+                    }
+                    
+                    return val;
                 };
                 
-                // Używamy metody złotego podziału do znalezienia optymalnego kroku
-                // Zakres poszukiwań [-10, 10] - można dostosować
-                solution step = golden(line_func, -10.0, 10.0, epsilon/10, Nmax, ud1, ud2);
-                double hj = step.x(0, 0);
+                // Znajdź przedział zawierający minimum z zabezpieczeniami
+                auto bracket = find_bracket(line_func_scalar, 0.0, 0.1);
                 
-                // 7: pj(i) = pj-1(i) + hj(i)·dj(i)
-                p[j] = p[j-1] + hj * d[j-1];
-            }
-            
-            // 9-11: Warunek stopu - sprawdź czy przemieszczenie jest małe
-            matrix delta = p[n] - p0;
-            if (norm(delta) < epsilon) {
-                Xopt.x = p[n];
-                Xopt.y = ff(p[n], ud1, ud2);
-                delete[] d;
-                delete[] p;
-                return Xopt;
-            }
-            
-            // 12-14: Aktualizacja kierunków - przesuń wszystkie o jeden w lewo
-            for (int j = 0; j < n - 1; ++j) {
-                d[j] = d[j + 1];
-            }
-            
-            // 15: dn(i+1) = pn(i) - p0(i)
-            d[n-1] = p[n] - p0;
-            
-            // Normalizuj nowy kierunek (opcjonalne, ale poprawia stabilność)
-            double norm_val = norm(d[n-1]);
-            if (norm_val > 1e-10) {
-                d[n-1] = d[n-1] / norm_val;
-            }
-            
-            // 16-17: Minimalizacja wzdłuż nowego kierunku (d[n-1])
-            auto new_line_func = [p, d, n, ff, ud1, ud2](matrix alpha_mat, matrix, matrix) -> matrix {
-                double alpha = alpha_mat(0, 0);
-                matrix new_point = p[n] + alpha * d[n-1];
-                return ff(new_point, ud1, ud2);
-            };
-            solution new_step = golden(new_line_func, -10.0, 10.0, epsilon, Nmax, ud1, ud2);
-            double h_new = new_step.x(0, 0);
-            
-            // 18: x(i+1) = pn(i) + h_new·d[n-1]
-            x = p[n] + h_new * d[n-1];
-            
-            // 19: i = i + 1
-            i++;
-            
-            // 20: Sprawdź warunek stopu Nmax
-            if (solution::f_calls > Nmax) {
-                std::cout << "Przekroczono maksymalną liczbę wywołań funkcji: " << Nmax << std::endl;
-                Xopt.x = x;
-                Xopt.y = ff(x, ud1, ud2);
-                delete[] d;
-                delete[] p;
-                return Xopt;
-            }
-            
-            // Sprawdź dodatkowy warunek stopu - brak poprawy
-            if (i > 1) {
-                matrix old_x = Xopt.x;
-                if (norm(x - old_x) < epsilon) {
-                    std::cout << "Minimalna poprawa po " << i << " iteracjach" << std::endl;
-                    Xopt.x = x;
-                    Xopt.y = ff(x, ud1, ud2);
-                    delete[] d;
-                    delete[] p;
-                    return Xopt;
+                // Jeśli bracket jest niepoprawny, użyj domyślnego
+                if (abs(bracket.second - bracket.first) < 1e-10) {
+                    bracket = {-1.0, 1.0};
+                }
+                
+                // Minimalizuj używając złotego podziału z obsługą błędów
+                auto line_func_matrix = [line_func_scalar](matrix alpha_mat, matrix, matrix) -> matrix {
+                    matrix result(1, 1);
+                    double alpha = alpha_mat(0, 0);
+                    result(0, 0) = line_func_scalar(alpha);
+                    return result;
+                };
+                
+                solution step;
+                try {
+                    // Ogranicz przedział do rozsądnych wartości
+                    double a = std::max(bracket.first, -100.0);
+                    double b = std::min(bracket.second, 100.0);
+                    
+                    // Zwiększ Nmax dla golden i zmniejsz wymaganą dokładność
+                    step = golden(line_func_matrix, a, b, 
+                                 epsilon * 10,  // Mniejsza dokładność dla line search
+                                 100,           // Ogranicz Nmax dla golden
+                                 matrix(), matrix());
+                }
+                catch (string ex_info) {
+                    // W przypadku błędu, użyj kroku 0
+                    step.x = matrix(1, 1, 0.0);
+                    step.y = matrix(1, 1, line_func_scalar(0.0));
+                }
+                
+                // Zastosuj krok jeśli daje poprawę i nie jest NaN
+                double alpha_opt = step.x(0, 0);
+                double new_f_val = m2d(step.y);
+                
+                if (!std::isnan(new_f_val) && abs(alpha_opt) > 1e-12 && new_f_val < f_val) {
+                    x = x + alpha_opt * d[j];
+                    f_val = new_f_val;
                 }
             }
             
-            Xopt.x = x;
-            Xopt.y = ff(x, ud1, ud2);
+            // 2. Oblicz nowy kierunek
+            matrix new_dir = x - x_start;
+            double dir_norm = norm(new_dir);
             
-            delete[] p;
+            // 3. Sprawdź warunki stopu
+            if (dir_norm < epsilon || abs(f_val - f_start) < epsilon) {
+                converged = true;
+                break;
+            }
             
-            // Ograniczenie maksymalnej liczby iteracji
-            if (i > 100 * n) {
-                std::cout << "Osiągnięto maksymalną liczbę iteracji: " << 100 * n << std::endl;
-                delete[] d;
-                return Xopt;
+            // 4. Jeśli nowy kierunek jest znaczący, dodaj go
+            if (dir_norm > epsilon) {
+                // Normalizuj
+                new_dir = new_dir / dir_norm;
+                
+                // Sprawdź liniową niezależność
+                bool is_independent = true;
+                for (int j = 0; j < n - 1; ++j) {
+                    double dot = 0.0;
+                    for (int k = 0; k < n; ++k) {
+                        dot += d[j](k, 0) * new_dir(k, 0);
+                    }
+                    if (abs(dot) > 0.99) { // Prawie równoległe
+                        is_independent = false;
+                        break;
+                    }
+                }
+                
+                // Jeśli niezależny, zastąp najstarszy kierunek
+                if (is_independent) {
+                    for (int j = 0; j < n - 1; ++j) {
+                        d[j] = d[j + 1];
+                    }
+                    d[n - 1] = new_dir;
+                }
+            }
+            
+            iter++;
+            
+            // Co 10 iteracji zresetuj kierunki, aby uniknąć degeneracji
+            if (iter % 10 == 0 && iter > 0) {
+                for (int j = 0; j < n; ++j) {
+                    d[j] = matrix(n, 1, 0.0);
+                    d[j](j, 0) = 1.0;
+                }
+            }
+            
+            // Wyświetl postęp co 10 iteracji
+            if (iter % 10 == 0) {
+                std::cout << "Iteracja " << iter << ": f = " << f_val 
+                          << ", ||Δx|| = " << dir_norm << std::endl;
             }
         }
         
-        // W praktyce nie dojdziemy tutaj, ale dla kompletności
+        if (!converged && iter >= max_iter) {
+            std::cout << "Uwaga: Osiągnięto maksymalną liczbę iteracji: " << max_iter << std::endl;
+        }
+        
+        Xopt.x = x;
+        Xopt.y = ff(x, ud1, ud2);
+        solution::f_calls++;
+        
         delete[] d;
         return Xopt;
     }

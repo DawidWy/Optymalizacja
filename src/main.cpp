@@ -872,7 +872,7 @@ void lab5()
     for (double w = 0.0; w <= 1.01; w += 0.01){
         double x1 = x0_dist(gen);
         double x2 = x0_dist(gen);
-        results << x1 << ", " << x2 << ", ";
+        results << x1 << "," << x2 << ",";
     for (double i = 0; i < 3; i++) {
         if (i == 0) a = 1;
         else if (i == 1) a = 10;
@@ -890,11 +890,9 @@ void lab5()
 			double x2_result = result.x(1);
             double f1 = a * (pow(x1_result - 3.0, 2) + pow(x2_result - 3.0, 2));
 			double f2 = (1.0 / a) * (pow(x1_result + 3.0, 2) + pow(x2_result + 3.0, 2));
-			int f_calls = solution::f_calls;
-            results << result.x(0) << ", " << result.x(1)
-            << ", " << f1<< ", " << f2 << ", " << result.f_calls <<"\n";
-        results << "\n ";
+            results << result.x(0) << "," << result.x(1) << "," << f1 << "," << f2 << "," << result.f_calls <<",";
     }
+    results << "\n";
 }
 Sout << results.str();
 Sout.close();
