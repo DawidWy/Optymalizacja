@@ -1293,7 +1293,7 @@ solution Powell(std::function<matrix(matrix, matrix, matrix)> ff, matrix x0, dou
             delete[] p;
             
             // Ograniczenie maksymalnej liczby iteracji
-            if (i > 100 * n) {
+            if (i > 1000 * n) {
                 std::cout << "Osiągnięto maksymalną liczbę iteracji: " << 100 * n << std::endl;
                 delete[] d;
                 return Xopt;

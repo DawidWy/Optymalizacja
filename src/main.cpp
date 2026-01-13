@@ -32,7 +32,7 @@ int main()
 
 	try
 	{
-        lab4();
+        lab5();
 		//lab4_csv();
 	}
 	catch (string EX_INFO)
@@ -861,7 +861,31 @@ void lab4_csv()
 
 void lab5()
 {
-}
+    int Nmax = 1e7;
+    double epsilon = 1e-3;
+    CSVStream Sout("symulacja_lab5.csv",{"w","l0","d0","l[m]","d[m]","m[kg]","u[m]","sigma[Pa]","f_calls"},';');
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dist0(200, 1000);
+    std::uniform_real_distribution<> dist1(1, 5);
+    matrix x(2,1);
+    for(int i = 0; i <= 100; i ++){
+        const double w = 0.01 * i; // [0,1]
+        auto f_real = [w](matrix x,matrix ud1, matrix ud2){
+            matrix fx = ff5R(x/1000,ud1,ud2);
+            return fx(0) * w + (1-w) * fx(1);
+        };
+        x(0) = dist0(gen);
+        x(1) = dist1(gen);
+        solution xopt = Powell(f_real,x,epsilon,Nmax);
+        //std::cout << xopt << std::endl;
+        matrix full_fx = ff5R(xopt.x/1000,NAN,NAN);
+        Sout<< w << x(0)/1000 << x(1)/1000 << xopt.x(0)/1000 << xopt.x(1)/1000 << full_fx(0) << full_fx(1) << full_fx(2) << solution::f_calls;
+        solution::clear_calls();
+    }
+
+
+}   
 
 void lab6()
 {
