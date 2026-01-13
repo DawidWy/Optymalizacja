@@ -1326,7 +1326,7 @@ solution Powell(std::function<matrix(matrix, matrix, matrix)> ff, matrix x0, dou
                 double alpha_opt = step.x(0, 0);
                 double new_f_val = m2d(step.y);
                 
-                if (!std::isnan(new_f_val) && abs(alpha_opt) > 1e-12 && new_f_val < f_val) {
+                if (!std::isnan(new_f_val) && abs(alpha_opt) > 1e-10 && new_f_val < f_val - epsilon) {
                     x = x + alpha_opt * d[j];
                     f_val = new_f_val;
                 }

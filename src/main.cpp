@@ -885,7 +885,7 @@ void lab5()
             x0(0) = x1;
             x0(1) = x2;
             solution::clear_calls();
-            result = Powell(ff5T1, x0, epsilon, Nmax);
+            result = Powell(ff5T1, x0, epsilon, Nmax, ud1, ud2);
             double x1_result = result.x(0);
 			double x2_result = result.x(1);
             double f1 = a * (pow(x1_result - 3.0, 2) + pow(x2_result - 3.0, 2));
