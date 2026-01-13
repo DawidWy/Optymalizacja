@@ -31,8 +31,7 @@ int main()
 {
 	try
 	{
-        lab4();
-		//lab4_csv();
+        lab5();
 	}
 	catch (string EX_INFO)
 	{
@@ -860,6 +859,45 @@ void lab4_csv()
 
 void lab5()
 {
+    std::ofstream Sout("symulacja_lab5.csv");
+    std::stringstream results;
+    std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_real_distribution<> x0_dist(-10,10);
+	solution test_sol;
+    double a, epsilon = 1e-3;
+    int Nmax = 100000;
+    solution result;
+    results << "x1(0);x2(0);Powell_x1;Powell_x2;Powell_y1;Powell_y2;Powell_f_calls\n";
+    for (double w = 0.0; w <= 1.01; w += 0.01){
+        double x1 = x0_dist(gen);
+        double x2 = x0_dist(gen);
+        results << x1 << ", " << x2 << ", ";
+    for (double i = 0; i < 3; i++) {
+        if (i == 0) a = 1;
+        else if (i == 1) a = 10;
+        else a = 100;
+            matrix ud1(1, 1);
+            ud1(0) = a;
+            matrix ud2(1, 1);
+            ud2(0) = w;
+            matrix x0(2, 1);
+            x0(0) = x1;
+            x0(1) = x2;
+            solution::clear_calls();
+            result = Powell(ff5T1, x0, epsilon, Nmax);
+            double x1_result = result.x(0);
+			double x2_result = result.x(1);
+            double f1 = a * (pow(x1_result - 3.0, 2) + pow(x2_result - 3.0, 2));
+			double f2 = (1.0 / a) * (pow(x1_result + 3.0, 2) + pow(x2_result + 3.0, 2));
+			int f_calls = solution::f_calls;
+            results << result.x(0) << ", " << result.x(1)
+            << ", " << f1<< ", " << f2 << ", " << result.f_calls <<"\n";
+        results << "\n ";
+    }
+}
+Sout << results.str();
+Sout.close();
 }
 
 void lab6()

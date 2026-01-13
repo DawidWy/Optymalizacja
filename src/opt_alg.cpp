@@ -1179,18 +1179,139 @@ solution golden(std::function<matrix(matrix, matrix, matrix)> ff, double a, doub
 
 solution Powell(std::function<matrix(matrix, matrix, matrix)> ff, matrix x0, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
-	try
-	{
-		solution Xopt;
-		// Tu wpisz kod funkcji
-
-		return Xopt;
-	}
-	catch (string ex_info)
-	{
-		throw("solution Powell(...):\n" + ex_info);
-	}
+    try
+    {
+        solution Xopt;
+        int n = get_len(x0); // wymiar problemu
+        
+        // 1: i = 0
+        int i = 0;
+        
+        // 2: d_j^(0) = e^j, j = 1, 2, …, n
+        matrix* d = new matrix[n];
+        for (int j = 0; j < n; ++j) {
+            d[j] = matrix(n, 1, 0.0);
+            d[j](j, 0) = 1.0; // wektor jednostkowy e^j
+        }
+        
+        // Inicjalizacja punktu bieżącego
+        matrix x = x0;
+        
+        // Główna pętla
+        while (true) {
+            // 4: p0(i) = x(i)
+            matrix p0 = x;
+            
+            // Tablica punktów pj
+            matrix* p = new matrix[n + 1];
+            p[0] = p0;
+            
+            // 5-8: Minimalizacja wzdłuż każdego kierunku
+            for (int j = 1; j <= n; ++j) {
+                // 6: wyznacz hj(i) - optymalny krok w kierunku d[j-1]
+                auto line_func = [p, d, j, ff, ud1, ud2](matrix alpha_mat, matrix, matrix) -> matrix {
+                    double alpha = alpha_mat(0, 0);
+                    // pj-1 + alpha * d_j
+                    matrix new_point = p[j-1] + alpha * d[j-1];
+                    return ff(new_point, ud1, ud2);
+                };
+                
+                // Używamy metody złotego podziału do znalezienia optymalnego kroku
+                // Zakres poszukiwań [-10, 10] - można dostosować
+				solution::f_calls = 0;
+                solution step = golden(line_func, -1.0, 1.0, epsilon/10, Nmax/10, matrix(), matrix());
+                double hj = step.x(0, 0);
+                
+                // 7: pj(i) = pj-1(i) + hj(i)·dj(i)
+                p[j] = p[j-1] + hj * d[j-1];
+            }
+            
+            // 9-11: Warunek stopu - sprawdź czy przemieszczenie jest małe
+            matrix delta = p[n] - p0;
+            if (norm(delta) < epsilon) {
+                Xopt.x = p[n];
+                Xopt.y = ff(p[n], ud1, ud2);
+                delete[] d;
+                delete[] p;
+                return Xopt;
+            }
+            
+            // 12-14: Aktualizacja kierunków - przesuń wszystkie o jeden w lewo
+            for (int j = 0; j < n - 1; ++j) {
+                d[j] = d[j + 1];
+            }
+            
+            // 15: dn(i+1) = pn(i) - p0(i)
+            d[n-1] = p[n] - p0;
+            
+            // Normalizuj nowy kierunek (opcjonalne, ale poprawia stabilność)
+            double norm_val = norm(d[n-1]);
+            if (norm_val > 1e-10) {
+                d[n-1] = d[n-1] / norm_val;
+            }
+            
+            // 16-17: Minimalizacja wzdłuż nowego kierunku (d[n-1])
+            auto new_line_func = [p, d, n, ff, ud1, ud2](matrix alpha_mat, matrix, matrix) -> matrix {
+                double alpha = alpha_mat(0, 0);
+                matrix new_point = p[n] + alpha * d[n-1];
+                return ff(new_point, ud1, ud2);
+            };
+            solution::f_calls = 0;
+            solution new_step = golden(new_line_func, -1.0, 1.0, epsilon, Nmax/10, matrix(), matrix());
+            double h_new = new_step.x(0, 0);
+            
+            // 18: x(i+1) = pn(i) + h_new·d[n-1]
+            x = p[n] + h_new * d[n-1];
+            
+            // 19: i = i + 1
+            i++;
+            
+            // 20: Sprawdź warunek stopu Nmax
+            if (solution::f_calls > Nmax) {
+                std::cout << "Przekroczono maksymalną liczbę wywołań funkcji: " << Nmax << std::endl;
+                Xopt.x = x;
+                Xopt.y = ff(x, ud1, ud2);
+                delete[] d;
+                delete[] p;
+                return Xopt;
+            }
+            
+            // Sprawdź dodatkowy warunek stopu - brak poprawy
+            if (i > 1) {
+                matrix old_x = Xopt.x;
+                if (norm(x - old_x) < epsilon) {
+                    std::cout << "Minimalna poprawa po " << i << " iteracjach" << std::endl;
+                    Xopt.x = x;
+                    Xopt.y = ff(x, ud1, ud2);
+                    delete[] d;
+                    delete[] p;
+                    return Xopt;
+                }
+            }
+            
+            Xopt.x = x;
+            Xopt.y = ff(x, ud1, ud2);
+            
+            delete[] p;
+            
+            // Ograniczenie maksymalnej liczby iteracji
+            if (i > 100 * n) {
+                std::cout << "Osiągnięto maksymalną liczbę iteracji: " << 100 * n << std::endl;
+                delete[] d;
+                return Xopt;
+            }
+        }
+        
+        // W praktyce nie dojdziemy tutaj, ale dla kompletności
+        delete[] d;
+        return Xopt;
+    }
+    catch (string ex_info)
+    {
+        throw("solution Powell(...):\n" + ex_info);
+    }
 }
+
 
 solution EA(std::function<matrix(matrix, matrix, matrix)> ff, int N, matrix lb, matrix ub, int mi, int lambda, matrix sigma0, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
