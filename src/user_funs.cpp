@@ -447,31 +447,123 @@ matrix ff5T1(matrix x, matrix ud1, matrix ud2) {
 }
 
 matrix ff5R(matrix x, matrix ud1, matrix ud2) {
-    // x(0) = l [m]
-    // x(1) = d [m]
+    double l = x(0, 0);  // długość belki [m]
+    double d = x(1, 0);  // średnica belki [m]
+    double w = ud1(0, 0);  // waga
     
-    double rho = 8920; // kg/m^3 
-    double P = 2000; // N
-    double E = 120000000000;// Pa
+    // Stałe
+    const double P = 2000.0;           // siła [N]
+    const double E = 120e9;            // moduł Younga [Pa]
+    const double rho = 8920.0;         // gęstość [kg/m^3]
+    const double u_max = 0.0025;       // max ugięcie [m] = 2.5 mm
+    const double sigma_max = 300e6;    // max naprężenie [Pa] = 300 MPa
     
-    double u_max = 2.5;
-    double sigma_max = 300000000;
-
-    matrix f(3,1);
-    // f(0) = m
-    // f(1) = u
-    double sigma = (32 * P * x(0))/(M_PI * pow(x(1),3));
-    f(0) = x(0) * M_PI * pow(x(1)/2., 2) * rho; // kg
-    f(1) = (64. * P * pow(x(0),3))/(3. * E * M_PI * pow(x(1),4)); // mm ??
-    f(2) = sigma;
-
+    // Granice
+    const double l_min = 0.2;   // 200 mm
+    const double l_max = 1.0;   // 1000 mm
+    const double d_min = 0.01;  // 10 mm
+    const double d_max = 0.05;  // 50 mm
     
-    if(!(x(0) >= 0.1 && x(0) <= 0.5) || !(x(1) >= 0.01 && x(1) <= 0.05) || sigma > sigma_max || f(1) > u_max || f(1) < 0 || f(0) < 0){
-       // std::cout << x(0) << " " << x(1) << " " << f(1) << " " << sigma << " " << f(0) << std::endl;
-        f(0) += 10e5;
-        f(1) += 10e5;
-        f(2) += 10e5;
+    matrix y(1, 1);
+    
+    // Kary za wyjście poza granice powinny być bardzo duże
+    double penalty = 0.0;
+    
+    // Kara za długość poza zakresem 
+    if (l < l_min) {
+        penalty += 1e12 * pow((l_min - l) / l_min, 5);
+        l = l_min;  // przytnij do minimum
+    }
+    if (l > l_max) {
+        penalty += 1e12 * pow((l - l_max) / l_max, 5);
+        l = l_max;  // przytnij do maksimum
     }
     
-    return f;
+    // Kara za średnicę poza zakresem
+    if (d < d_min) {
+        penalty += 1e12 * pow((d_min - d) / d_min, 5);
+        d = d_min;
+    }
+    if (d > d_max) {
+        penalty += 1e12 * pow((d - d_max) / d_max, 5);
+        d = d_max;
+    }
+    
+    // Dodatkowe kary za zbliżanie się do granic (bariera wewnętrzna)
+    double margin = 0.03;  // 3% margines
+    if (l < l_min * (1.0 + margin)) {
+        penalty += 1e9 * pow((l_min * (1.0 + margin) - l) / l_min, 4);
+    }
+    if (l > l_max * (1.0 - margin)) {
+        penalty += 1e9 * pow((l - l_max * (1.0 - margin)) / l_max, 4);
+    }
+    if (d < d_min * (1.0 + margin)) {
+        penalty += 1e9 * pow((d_min * (1.0 + margin) - d) / d_min, 4);
+    }
+    if (d > d_max * (1.0 - margin)) {
+        penalty += 1e9 * pow((d - d_max * (1.0 - margin)) / d_max, 4);
+    }
+    
+    // Ochrona przed wartościami niepoprawnymi
+    if (l <= 0 || d <= 0) {
+        y(0, 0) = 1e20;
+        return y;
+    }
+    
+    // Obliczenia
+    // Masa belki: m = rho * V = rho * (pi * d^2 / 4) * l
+    double masa = rho * M_PI * pow(d, 2) / 4.0 * l;  // [kg]
+    
+    // Ugięcie: u = (64*P*l^3)/(3*E*pi*d^4)
+    double u = (64.0 * P * pow(l, 3)) / (3.0 * E * M_PI * pow(d, 4));  // [m]
+    
+    // Naprężenie: sigma = (32*P*l)/(pi*d^3)
+    double sigma = (32.0 * P * l) / (M_PI * pow(d, 3));  // [Pa]
+    
+    // Normalizacja do zakresu [0,1] na podstawie przybliżonych zakresów
+    // Bez niej Powell ma tendencję ignorować kary
+    // Zakresy z przykładu: masa ~0.7-3.5 kg, ugięcie ~0.00014-0.011 m
+    // Nieco szersze dla bezpieczeństwa
+    double masa_min = 0.5;
+    double masa_max = 8.0;
+    double u_min = 0.0001;
+    double u_max_range = 0.02;
+    
+    double f1_norm = (masa - masa_min) / (masa_max - masa_min);
+    double f2_norm = (u - u_min) / (u_max_range - u_min);
+    
+    // Ograniczenie znormalizowanych wartości do [0,1]
+    f1_norm = std::max(0.0, std::min(1.0, f1_norm));
+    f2_norm = std::max(0.0, std::min(1.0, f2_norm));
+    
+    // Funkcja wielokryterialna
+    y(0, 0) = w * f1_norm + (1.0 - w) * f2_norm;
+    
+    // Kary za naruszenie ograniczeń ugięcia i naprężenia
+    if (u > u_max) {
+        double error = (u - u_max) / u_max;
+        penalty += 1e6 * pow(error, 2);
+    }
+    
+    if (sigma > sigma_max) {
+        double error = (sigma - sigma_max) / sigma_max;
+        penalty += 1e6 * pow(error, 2);
+    }
+    
+    // Bariery wewnętrzne dla ograniczeń technicznych
+    double safety_margin = 0.95;  // 95% wartości maksymalnej
+    if (u > u_max * safety_margin) {
+        double error = (u - u_max * safety_margin) / (u_max * (1.0 - safety_margin));
+        penalty += 1e4 * pow(error, 2);
+    }
+    
+    if (sigma > sigma_max * safety_margin) {
+        double error = (sigma - sigma_max * safety_margin) / (sigma_max * (1.0 - safety_margin));
+        penalty += 1e4 * pow(error, 2);
+    }
+    
+    // Dodanie wszystkich kar
+    y(0, 0) += penalty;
+    
+    return y;
 }

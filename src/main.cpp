@@ -16,6 +16,7 @@ Data ostatniej modyfikacji: 30.09.2025
 #include "ode_solver.h"
 #include <cmath>
 #include <cstdlib>
+#include <iomanip>
 #include <random>
 
 void lab0();
@@ -859,33 +860,73 @@ void lab4_csv()
 
 }
 
-void lab5()
-{
-    int Nmax = 1e7;
-    double epsilon = 1e-3;
-    CSVStream Sout("symulacja_lab5.csv",{"w","l0","d0","l[m]","d[m]","m[kg]","u[m]","sigma[Pa]","f_calls"},';');
+void lab5() {
+    int Nmax = 1000000;
+    double epsilon = 1e-6;
+    
+    CSVStream Sout("symulacja_lab5.csv", {
+        "w", "l0[mm]", "d0[mm]", "l_opt[mm]", "d_opt[mm]", 
+        "m[kg]", "u[mm]", "sigma[MPa]", "f_calls"
+    }, ';');
+    
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_real_distribution<> dist0(200, 1000);
-    std::uniform_real_distribution<> dist1(1, 5);
-    matrix x(2,1);
-    for(int i = 0; i <= 100; i ++){
-        const double w = 0.01 * i; // [0,1]
-        auto f_real = [w](matrix x,matrix ud1, matrix ud2){
-            matrix fx = ff5R(x/1000,ud1,ud2);
-            return fx(0) * w + (1-w) * fx(1);
+    
+    // Zakresy zgodne z zadaniem
+    std::uniform_real_distribution<> dist_l(200, 1000);
+    std::uniform_real_distribution<> dist_d(10, 50);
+    
+    for(int i = 0; i <= 100; i++) {
+        double w = i / 100.0;
+        
+        // Przygotuj ud1 z wagą
+        matrix ud1(1, 1, w);
+        
+        auto objective_function = [ud1](matrix x, matrix, matrix ud2) {
+            // x jest w mm, konwertuj do metrów
+            matrix x_m(2, 1);
+            x_m(0, 0) = x(0, 0) / 1000.0;
+            x_m(1, 0) = x(1, 0) / 1000.0;
+            
+            return ff5R(x_m, ud1, ud2);
         };
-        x(0) = dist0(gen);
-        x(1) = dist1(gen);
-        solution xopt = Powell(f_real,x,epsilon,Nmax);
-        //std::cout << xopt << std::endl;
-        matrix full_fx = ff5R(xopt.x/1000,NAN,NAN);
-        Sout<< w << x(0)/1000 << x(1)/1000 << xopt.x(0)/1000 << xopt.x(1)/1000 << full_fx(0) << full_fx(1) << full_fx(2) << solution::f_calls;
-        solution::clear_calls();
+        
+        // Punkt startowy
+        matrix x_start(2, 1);
+        x_start(0, 0) = dist_l(gen);
+        x_start(1, 0) = dist_d(gen);
+        
+        solution::f_calls = 0;
+        
+        try {
+            solution xopt = Powell(objective_function, x_start, epsilon, Nmax);
+            
+            double l_opt_mm = xopt.x(0, 0);
+            double d_opt_mm = xopt.x(1, 0);
+            
+            // Obliczenia bez kary dla walidacji
+            double l = l_opt_mm / 1000.0;
+            double d = d_opt_mm / 1000.0;
+            
+            // Obliczenia podstawowe
+            double masa = 8920.0 * M_PI * pow(d, 2) / 4.0 * l;
+            double u = (64.0 * 2000.0 * pow(l, 3)) / (3.0 * 120e9 * M_PI * pow(d, 4));
+            double sigma = (32.0 * 2000.0 * l) / (M_PI * pow(d, 3));
+            
+        
+            
+            Sout << w << x_start(0,0) << x_start(1,0) 
+                 << l_opt_mm << d_opt_mm 
+                 << masa << u * 1000.0 << sigma / 1e6 
+                 << solution::f_calls;
+                 
+        } catch (std::string& e) {
+            Sout << w << x_start(0,0) << x_start(1,0) 
+                 << "ERROR" << "ERROR" << "ERROR" << "ERROR" << "ERROR" 
+                 << solution::f_calls;
+        }
     }
-
-
-}   
+}
 
 void lab6()
 {
