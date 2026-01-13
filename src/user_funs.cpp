@@ -435,3 +435,12 @@ matrix gf4R(matrix theta, matrix X, matrix Y) {
         throw ("matrix gf4R(...):\n" + ex_info);
     }
 }
+
+matrix ff5T1(matrix x, matrix ud1, matrix ud2) {
+    matrix f(2,1);
+    double a = ud1(0);
+    double x1 = x(0);
+    double x2 = x(1);
+    f(0) = a * (pow(x1 - 3, 2) + pow(x2 - 3, 2));
+    f(0) = 1.0 / a * (pow(x1 + 3, 2)+pow(x2 + 3, 2));
+}
