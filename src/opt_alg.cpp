@@ -1218,8 +1218,7 @@ solution Powell(std::function<matrix(matrix, matrix, matrix)> ff, matrix x0, dou
                 
                 // Używamy metody złotego podziału do znalezienia optymalnego kroku
                 // Zakres poszukiwań [-10, 10] - można dostosować
-				solution::f_calls = 0;
-                solution step = golden(line_func, -1.0, 1.0, epsilon/10, Nmax/10, matrix(), matrix());
+                solution step = golden(line_func, -10.0, 10.0, epsilon/10, Nmax, ud1, ud2);
                 double hj = step.x(0, 0);
                 
                 // 7: pj(i) = pj-1(i) + hj(i)·dj(i)
@@ -1256,8 +1255,7 @@ solution Powell(std::function<matrix(matrix, matrix, matrix)> ff, matrix x0, dou
                 matrix new_point = p[n] + alpha * d[n-1];
                 return ff(new_point, ud1, ud2);
             };
-            solution::f_calls = 0;
-            solution new_step = golden(new_line_func, -1.0, 1.0, epsilon, Nmax/10, matrix(), matrix());
+            solution new_step = golden(new_line_func, -10.0, 10.0, epsilon, Nmax, ud1, ud2);
             double h_new = new_step.x(0, 0);
             
             // 18: x(i+1) = pn(i) + h_new·d[n-1]
