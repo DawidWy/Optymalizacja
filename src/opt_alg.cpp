@@ -1179,19 +1179,97 @@ solution golden(std::function<matrix(matrix, matrix, matrix)> ff, double a, doub
 
 solution Powell(std::function<matrix(matrix, matrix, matrix)> ff, matrix x0, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
-	try
-	{
-		solution Xopt;
-		// Tu wpisz kod funkcji
-
-		return Xopt;
-	}
-	catch (string ex_info)
-	{
-		throw("solution Powell(...):\n" + ex_info);
-	}
+    try
+    {
+        solution Xopt;
+        int n = get_len(x0); // wymiar problemu
+        
+        // Inicjalizacja kierunków - początkowo kierunki jednostkowe (baza kanoniczna)
+        matrix* directions = new matrix[n];
+        for (int i = 0; i < n; ++i) {
+            directions[i] = matrix(n, 1, 0.0);
+            directions[i](i, 0) = 1.0;
+        }
+        
+        matrix x = x0; // bieżący punkt
+        matrix x_old = x0;
+        double f_old = m2d(ff(x0, ud1, ud2));
+        solution::f_calls++;
+        
+        int iteration = 0;
+        bool converged = false;
+        
+        while (!converged && iteration < Nmax) {
+            // Zapamiętujemy punkt początkowy dla tej iteracji
+            matrix x_start = x;
+            
+            // Minimalizacja wzdłuż każdego kierunku
+            for (int i = 0; i < n; ++i) {
+                // Znajdź optymalny krok w kierunku directions[i]
+                double alpha = find_step_length(x, directions[i], ff, ud1, ud2, epsilon, Nmax);
+                
+                // Aktualizuj punkt
+                x = x + alpha * directions[i];
+            }
+            
+            // Sprawdź warunek zbieżności
+            double f_new = m2d(ff(x, ud1, ud2));
+            solution::f_calls++;
+            
+            // Warunek stopu: mała zmiana wartości funkcji
+            if (abs(f_new - f_old) < epsilon) {
+                converged = true;
+            }
+            
+            // Aktualizuj najlepszy kierunek (kierunek całkowitego przemieszczenia)
+            matrix delta_x = x - x_start;
+            
+            // Znajdź kierunek, w którym osiągnięto największy spadek
+            double max_improvement = 0.0;
+            int max_idx = 0;
+            
+            // Testujemy zastąpienie jednego z kierunków
+            for (int i = 0; i < n - 1; ++i) {
+                directions[i] = directions[i + 1];
+            }
+            directions[n - 1] = delta_x;
+            
+            // Normalizuj nowy kierunek
+            double norm_val = norm(directions[n - 1]);
+            if (norm_val > epsilon) {
+                directions[n - 1] = directions[n - 1] / norm_val;
+            }
+            
+            // Aktualizuj dla następnej iteracji
+            f_old = f_new;
+            x_old = x;
+            iteration++;
+            
+            // Dodatkowy warunek stopu: mała zmiana w punkcie
+            if (norm(delta_x) < epsilon) {
+                converged = true;
+            }
+            
+            // Sprawdzenie przekroczenia maksymalnej liczby wywołań funkcji
+            if (solution::f_calls > Nmax) {
+                throw std::string("Przekroczono maksymalną liczbę wywołań funkcji (Nmax).");
+            }
+        }
+        
+        // Zwróć wynik
+        Xopt.x = x;
+        Xopt.y = ff(x, ud1, ud2);
+        
+        // Zwolnij pamięć
+        delete[] directions;
+        
+        return Xopt;
+    }
+    catch (string ex_info)
+    {
+        throw("solution Powell(...):\n" + ex_info);
+    }
 }
-
 solution EA(std::function<matrix(matrix, matrix, matrix)> ff, int N, matrix lb, matrix ub, int mi, int lambda, matrix sigma0, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
 	try
