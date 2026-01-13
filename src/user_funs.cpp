@@ -442,5 +442,6 @@ matrix ff5T1(matrix x, matrix ud1, matrix ud2) {
     double x1 = x(0);
     double x2 = x(1);
     f(0) = a * (pow(x1 - 3, 2) + pow(x2 - 3, 2));
-    f(0) = 1.0 / a * (pow(x1 + 3, 2)+pow(x2 + 3, 2));
+    f(1) = 1.0 / a * (pow(x1 + 3, 2)+pow(x2 + 3, 2));
+    return f;
 }
