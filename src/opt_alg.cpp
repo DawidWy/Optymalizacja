@@ -1177,19 +1177,230 @@ solution golden(std::function<matrix(matrix, matrix, matrix)> ff, double a, doub
 	}
 }
 
+// Funkcja pomocnicza do znajdowania przedziału z zabezpieczeniami
+std::pair<double, double> find_bracket(std::function<double(double)> f, double start = 0.0, double initial_step = 0.01) {
+    double a = start;
+    double fa = f(a);
+    
+    // Sprawdź, czy funkcja zwraca NaN
+    if (std::isnan(fa)) {
+        return {0.0, 0.0};
+    }
+    
+    // Szukaj w obu kierunkach
+    double b = a + initial_step;
+    double fb = f(b);
+    
+    // Jeśli funkcja rośnie w prawo, spróbuj w lewo
+    if (fb > fa) {
+        b = a - initial_step;
+        fb = f(b);
+    }
+    
+    // Jeśli nadal rośnie, przedział jest wąski
+    if (fb > fa || std::isnan(fb)) {
+        return {a - initial_step, a + initial_step};
+    }
+    
+    // Rozszerzaj przedział w kierunku spadku funkcji, ale z ograniczeniami
+    double c = b;
+    double fc = fb;
+    double factor = 2.0;
+    int max_expansions = 10; // Maksymalnie 10 rozszerzeń
+    
+    for (int i = 0; i < max_expansions; ++i) {
+        double prev_c = c;
+        c = b + factor * (b - a);
+        
+        // Ogranicz maksymalną wartość c
+        if (abs(c) > 1000.0) {
+            c = (c > 0) ? 1000.0 : -1000.0;
+        }
+        
+        fc = f(c);
+        
+        // Jeśli fc jest NaN lub funkcja zaczyna rosnąć, zatrzymaj
+        if (std::isnan(fc) || fc > fb) {
+            c = prev_c; // Wróć do poprzedniej wartości
+            break;
+        }
+        
+        // Aktualizuj a, b
+        a = b;
+        fa = fb;
+        b = c;
+        fb = fc;
+        
+        factor *= 2.0;
+    }
+    
+    // Upewnij się, że a < c
+    if (a > c) std::swap(a, c);
+    
+    // Jeśli przedział jest zbyt mały, rozszerz
+    if (abs(c - a) < 1e-6) {
+        a = start - 1.0;
+        c = start + 1.0;
+    }
+    
+    return {a, c};
+}
+
 solution Powell(std::function<matrix(matrix, matrix, matrix)> ff, matrix x0, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
-	try
-	{
-		solution Xopt;
-		// Tu wpisz kod funkcji
-
-		return Xopt;
-	}
-	catch (string ex_info)
-	{
-		throw("solution Powell(...):\n" + ex_info);
-	}
+    try
+    {
+        solution Xopt;
+        int n = get_len(x0);
+        
+        // Inicjalizacja kierunków
+        matrix* d = new matrix[n];
+        for (int j = 0; j < n; ++j) {
+            d[j] = matrix(n, 1, 0.0);
+            d[j](j, 0) = 1.0;
+        }
+        
+        matrix x = x0;
+        double f_val = m2d(ff(x, ud1, ud2));
+        solution::f_calls++;
+        
+        int iter = 0;
+        const int max_iter = 200;
+        bool converged = false;
+        
+        while (!converged && iter < max_iter && solution::f_calls < Nmax) {
+            matrix x_start = x;
+            double f_start = f_val;
+            
+            // 1. Minimalizacja wzdłuż każdego kierunku
+            for (int j = 0; j < n; ++j) {
+                // Utwórz funkcję jednowymiarową z zabezpieczeniem przed NaN
+                auto line_func_scalar = [x, d, j, ff, ud1, ud2](double alpha) -> double {
+                    matrix x_new = x + alpha * d[j];
+                    matrix result = ff(x_new, ud1, ud2);
+                    double val = m2d(result);
+                    
+                    // Jeśli NaN, zwróć bardzo dużą wartość
+                    if (std::isnan(val)) {
+                        return 1e100;
+                    }
+                    
+                    return val;
+                };
+                
+                // Znajdź przedział zawierający minimum z zabezpieczeniami
+                auto bracket = find_bracket(line_func_scalar, 0.0, 0.1);
+                
+                // Jeśli bracket jest niepoprawny, użyj domyślnego
+                if (abs(bracket.second - bracket.first) < 1e-10) {
+                    bracket = {-1.0, 1.0};
+                }
+                
+                // Minimalizuj używając złotego podziału z obsługą błędów
+                auto line_func_matrix = [line_func_scalar](matrix alpha_mat, matrix, matrix) -> matrix {
+                    matrix result(1, 1);
+                    double alpha = alpha_mat(0, 0);
+                    result(0, 0) = line_func_scalar(alpha);
+                    return result;
+                };
+                
+                solution step;
+                try {
+                    // Ogranicz przedział do rozsądnych wartości
+                    double a = std::max(bracket.first, -100.0);
+                    double b = std::min(bracket.second, 100.0);
+                    
+                    // Zwiększ Nmax dla golden i zmniejsz wymaganą dokładność
+                    step = golden(line_func_matrix, a, b, 
+                                 epsilon * 10,  // Mniejsza dokładność dla line search
+                                 100,           // Ogranicz Nmax dla golden
+                                 matrix(), matrix());
+                }
+                catch (string ex_info) {
+                    // W przypadku błędu, użyj kroku 0
+                    step.x = matrix(1, 1, 0.0);
+                    step.y = matrix(1, 1, line_func_scalar(0.0));
+                }
+                
+                // Zastosuj krok jeśli daje poprawę i nie jest NaN
+                double alpha_opt = step.x(0, 0);
+                double new_f_val = m2d(step.y);
+                
+                if (!std::isnan(new_f_val) && abs(alpha_opt) > 1e-10 && new_f_val < f_val - epsilon) {
+                    x = x + alpha_opt * d[j];
+                    f_val = new_f_val;
+                }
+            }
+            
+            // 2. Oblicz nowy kierunek
+            matrix new_dir = x - x_start;
+            double dir_norm = norm(new_dir);
+            
+            // 3. Sprawdź warunki stopu
+            if (dir_norm < epsilon || abs(f_val - f_start) < epsilon) {
+                converged = true;
+                break;
+            }
+            
+            // 4. Jeśli nowy kierunek jest znaczący, dodaj go
+            if (dir_norm > epsilon) {
+                // Normalizuj
+                new_dir = new_dir / dir_norm;
+                
+                // Sprawdź liniową niezależność
+                bool is_independent = true;
+                for (int j = 0; j < n - 1; ++j) {
+                    double dot = 0.0;
+                    for (int k = 0; k < n; ++k) {
+                        dot += d[j](k, 0) * new_dir(k, 0);
+                    }
+                    if (abs(dot) > 0.99) { // Prawie równoległe
+                        is_independent = false;
+                        break;
+                    }
+                }
+                
+                // Jeśli niezależny, zastąp najstarszy kierunek
+                if (is_independent) {
+                    for (int j = 0; j < n - 1; ++j) {
+                        d[j] = d[j + 1];
+                    }
+                    d[n - 1] = new_dir;
+                }
+            }
+            
+            iter++;
+            
+            // Co 10 iteracji zresetuj kierunki, aby uniknąć degeneracji
+            if (iter % 10 == 0 && iter > 0) {
+                for (int j = 0; j < n; ++j) {
+                    d[j] = matrix(n, 1, 0.0);
+                    d[j](j, 0) = 1.0;
+                }
+            }
+            
+            // Wyświetl postęp co 10 iteracji
+            if (iter % 10 == 0) {
+                std::cout << "Iteracja " << iter << ": f = " << f_val 
+                          << ", ||Δx|| = " << dir_norm << std::endl;
+            }
+        }
+        
+        if (!converged && iter >= max_iter) {
+            std::cout << "Uwaga: Osiągnięto maksymalną liczbę iteracji: " << max_iter << std::endl;
+        }
+        
+        Xopt.x = x;
+        Xopt.y = ff(x, ud1, ud2);
+        solution::f_calls++;
+        
+        delete[] d;
+        return Xopt;
+    }
+    catch (string ex_info)
+    {
+        throw("solution Powell(...):\n" + ex_info);
+    }
 }
 
 solution EA(std::function<matrix(matrix, matrix, matrix)> ff, int N, matrix lb, matrix ub, int mi, int lambda, matrix sigma0, double epsilon, int Nmax, matrix ud1, matrix ud2)
