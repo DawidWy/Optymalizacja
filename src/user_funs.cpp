@@ -445,3 +445,20 @@ matrix ff5T1(matrix x, matrix ud1, matrix ud2) {
     f(1) = 1.0 / a * (pow(x1 + 3, 2)+pow(x2 + 3, 2));
     return f;
 }
+
+matrix ff5R(matrix x, matrix ud1, matrix ud2) {
+    // x(0) = l [m]
+    // x(1) = d [m]
+    double rho = 8920; // kg/m^3 
+    double P = 2000; // N
+    double E = 120000000;// Pa
+
+    matrix f(3,1);
+    // f(0) = m
+    // f(1) = u
+    double sigma = (32 * P * x(0))/(M_PI * pow(x(1),3));
+    f(0) = x(0) * M_PI * pow(x(1)/2., 2) * rho; // kg
+    f(1) = (64. * P * pow(x(0),3))/(3. * E * M_PI * pow(x(1),4)); // mm
+    f(2) = sigma; // Pa
+    return f;
+}

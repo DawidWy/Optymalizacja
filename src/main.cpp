@@ -28,7 +28,8 @@ void lab5();
 void lab6();
 
 int main()
-{
+{   
+
 	try
 	{
         lab4();
