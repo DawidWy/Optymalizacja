@@ -1208,20 +1208,8 @@ solution Powell(std::function<matrix(matrix, matrix, matrix)> ff, matrix x0, dou
             
             // 5-8: Minimalizacja wzdłuż każdego kierunku
             for (int j = 1; j <= n; ++j) {
-                // 6: wyznacz hj(i) - optymalny krok w kierunku d[j-1]
-                auto line_func = [p, d, j, ff, ud1, ud2](matrix alpha_mat, matrix, matrix) -> matrix {
-                    double alpha = alpha_mat(0, 0);
-                    // pj-1 + alpha * d_j
-                    matrix new_point = p[j-1] + alpha * d[j-1];
-                    return ff(new_point, ud1, ud2);
-                };
-                
-                // Używamy metody złotego podziału do znalezienia optymalnego kroku
-                // Zakres poszukiwań [-10, 10] - można dostosować
-                solution step = golden(line_func, -10.0, 10.0, epsilon/10, Nmax, ud1, ud2);
-                double hj = step.x(0, 0);
-                
-                // 7: pj(i) = pj-1(i) + hj(i)·dj(i)
+                // 6-7: Wyznacz optymalny krok hj i nowy punkt p[j]
+				double hj = find_step_length(p[j-1], d[j-1], ff, ud1, ud2, epsilon/10, Nmax);
                 p[j] = p[j-1] + hj * d[j-1];
             }
             
@@ -1250,13 +1238,7 @@ solution Powell(std::function<matrix(matrix, matrix, matrix)> ff, matrix x0, dou
             }
             
             // 16-17: Minimalizacja wzdłuż nowego kierunku (d[n-1])
-            auto new_line_func = [p, d, n, ff, ud1, ud2](matrix alpha_mat, matrix, matrix) -> matrix {
-                double alpha = alpha_mat(0, 0);
-                matrix new_point = p[n] + alpha * d[n-1];
-                return ff(new_point, ud1, ud2);
-            };
-            solution new_step = golden(new_line_func, -10.0, 10.0, epsilon, Nmax, ud1, ud2);
-            double h_new = new_step.x(0, 0);
+			double h_new = find_step_length(p[n], d[n-1], ff, ud1, ud2, epsilon, Nmax);
             
             // 18: x(i+1) = pn(i) + h_new·d[n-1]
             x = p[n] + h_new * d[n-1];
@@ -1288,13 +1270,13 @@ solution Powell(std::function<matrix(matrix, matrix, matrix)> ff, matrix x0, dou
             }
             
             Xopt.x = x;
-            Xopt.y = ff(x, ud1, ud2);
             
             delete[] p;
-            
+
             // Ograniczenie maksymalnej liczby iteracji
             if (i > 1000 * n) {
                 std::cout << "Osiągnięto maksymalną liczbę iteracji: " << 100 * n << std::endl;
+				Xopt.y = ff(x, ud1, ud2);
                 delete[] d;
                 return Xopt;
             }
@@ -1302,6 +1284,7 @@ solution Powell(std::function<matrix(matrix, matrix, matrix)> ff, matrix x0, dou
         
         // W praktyce nie dojdziemy tutaj, ale dla kompletności
         delete[] d;
+		Xopt.y = ff(Xopt.x, ud1, ud2);
         return Xopt;
     }
     catch (string ex_info)

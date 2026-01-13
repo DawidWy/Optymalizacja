@@ -863,28 +863,54 @@ void lab5()
 {
     int Nmax = 1e7;
     double epsilon = 1e-3;
-    CSVStream Sout("symulacja_lab5.csv",{"w","l0","d0","l[m]","d[m]","m[kg]","u[m]","sigma[Pa]","f_calls"},';');
+    CSVStream Sout("symulacja_lab5.csv",{"w","l0","d0","l[mm]","d[mm]","m[kg]","u[mm]","sigma[Pa]","f_calls"},';');
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<> dist0(200, 1000);
-    std::uniform_real_distribution<> dist1(1, 5);
+    std::uniform_real_distribution<> dist1(10, 50);
     matrix x(2,1);
     for(int i = 0; i <= 100; i ++){
         const double w = 0.01 * i; // [0,1]
         auto f_real = [w](matrix x,matrix ud1, matrix ud2){
-            matrix fx = ff5R(x/1000,ud1,ud2);
-            return fx(0) * w + (1-w) * fx(1);
+            double penalty = 0.0;
+            //Box constraints for l (x(0)) in mm
+            if(x(0) < 200 ){
+                penalty += 100*(200 - x(0));
+            }
+            if(x(0) > 1000){
+                penalty += 100*(x(0) - 1000);
+            }
+            //Box constraints for d (x(1)) in mm
+            if(x(1) < 10){
+                penalty += 1000*(10 - x(1));
+            }
+            if(x(1) > 50){
+                penalty += 1000*(x(1) - 50);
+            }
+
+            // Call ff5R with variables in meters
+            matrix fx = ff5R(x/1000.0, ud1, ud2);
+
+            // Constraint on deflection u (fx(1)) in mm
+            if(fx(1) > 2.5){
+                penalty += 100000 * (fx(1) - 2.5);
+            }
+
+            // Constraint on stress sigma (fx(2)) in Pa
+            if(fx(2) > 3e8){
+                penalty += (fx(2) - 3e8) / 1e6; // Scaled penalty
+            }
+
+            return (fx(0) * w + (1-w) * fx(1) * 4) + penalty;
         };
         x(0) = dist0(gen);
         x(1) = dist1(gen);
         solution xopt = Powell(f_real,x,epsilon,Nmax);
         //std::cout << xopt << std::endl;
-        matrix full_fx = ff5R(xopt.x/1000,NAN,NAN);
-        Sout<< w << x(0)/1000 << x(1)/1000 << xopt.x(0)/1000 << xopt.x(1)/1000 << full_fx(0) << full_fx(1) << full_fx(2) << solution::f_calls;
+        matrix full_fx = ff5R(xopt.x/1000.0,NAN,NAN);
+        Sout<< w << x(0) << x(1) << xopt.x(0) << xopt.x(1) << full_fx(0) << full_fx(1) << full_fx(2) << solution::f_calls;
         solution::clear_calls();
     }
-
-
 }   
 
 void lab6()

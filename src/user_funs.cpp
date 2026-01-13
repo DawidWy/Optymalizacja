@@ -453,25 +453,14 @@ matrix ff5R(matrix x, matrix ud1, matrix ud2) {
     double rho = 8920; // kg/m^3 
     double P = 2000; // N
     double E = 120000000000;// Pa
-    
-    double u_max = 2.5;
-    double sigma_max = 300000000;
 
     matrix f(3,1);
-    // f(0) = m
-    // f(1) = u
-    double sigma = (32 * P * x(0))/(M_PI * pow(x(1),3));
-    f(0) = x(0) * M_PI * pow(x(1)/2., 2) * rho; // kg
-    f(1) = (64. * P * pow(x(0),3))/(3. * E * M_PI * pow(x(1),4)); // mm ??
-    f(2) = sigma;
-
-    
-    if(!(x(0) >= 0.1 && x(0) <= 0.5) || !(x(1) >= 0.01 && x(1) <= 0.05) || sigma > sigma_max || f(1) > u_max || f(1) < 0 || f(0) < 0){
-       // std::cout << x(0) << " " << x(1) << " " << f(1) << " " << sigma << " " << f(0) << std::endl;
-        f(0) += 10e5;
-        f(1) += 10e5;
-        f(2) += 10e5;
-    }
+    // f(0) = m [kg]
+    // f(1) = u [mm]
+    // f(2) = sigma [Pa]
+    f(0) = x(0) * M_PI * pow(x(1), 2) * rho/4.;
+    f(1) = (64. * P * pow(x(0),3))/(3. * E * M_PI * pow(x(1),4)) * 1000; // m -> mm
+    f(2) = (32 * P * x(0))/(M_PI * pow(x(1),3));
     
     return f;
 }
