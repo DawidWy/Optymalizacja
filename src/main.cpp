@@ -17,6 +17,7 @@ Data ostatniej modyfikacji: 30.09.2025
 #include <cmath>
 #include <cstdlib>
 #include <iomanip>
+#include <limits.h>
 #include <random>
 
 void lab0();
@@ -33,7 +34,7 @@ int main()
 
 	try
 	{
-        lab5();
+        lab6();
 		//lab4_csv();
 	}
 	catch (string EX_INFO)
@@ -930,4 +931,17 @@ void lab5() {
 
 void lab6()
 {
+    int N = 2;  // 2 wymiary (x1, x2)
+    matrix lb(N, 1, -5.0);   // Dolne ograniczenia [-5, -5]
+    matrix ub(N, 1, 5.0);    // Górne ograniczenia [5, 5]
+    double epsilon = 1e-6; // Precyzja
+    int Nmax = 10000; // Maksymalna ilość wywołań
+    matrix ud1(1, 1, NAN);
+    matrix ud2(1, 1, NAN);
+    int mi = 20; //Populacja bazowa
+    int lambda = 80; //Populacja przejściowa
+    matrix sigma0(N, 1, 1.0); //Współczynnik zakresu mutacji
+
+    solution result = EA(ff2T, N, lb, ub, mi, lambda, sigma0, epsilon, Nmax, ud1, ud2);
+    std::cout << result;
 }

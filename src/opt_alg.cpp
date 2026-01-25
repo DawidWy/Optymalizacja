@@ -1,6 +1,8 @@
 #include "opt_alg.h"
+#include "matrix.h"
 #include "solution.h"
 #include <algorithm>
+#include <bitset>
 #include <cmath>
 #include <stdexcept>
 #include <system_error>
@@ -1298,38 +1300,137 @@ solution EA(std::function<matrix(matrix, matrix, matrix)> ff, int N, matrix lb, 
 	try
 	{
 		solution Xopt;
-		// Tu wpisz kod funkcji
-
-		return Xopt;
-	}
-	catch (string ex_info)
-	{
-		throw("solution EA(...):\n" + ex_info);
-	}
-}
-
-solution Powell(matrix (*ff)(matrix, matrix, matrix), matrix x0, double epsilon, int Nmax, matrix ud1, matrix ud2)
-{
-	try
-	{
-		solution Xopt;
-		// Tu wpisz kod funkcji
-
-		return Xopt;
-	}
-	catch (string ex_info)
-	{
-		throw("solution Powell(...):\n" + ex_info);
-	}
-}
-
-solution EA(matrix (*ff)(matrix, matrix, matrix), int N, matrix lb, matrix ub, int mi, int lambda, matrix sigma0, double epsilon, int Nmax, matrix ud1, matrix ud2)
-{
-	try
-	{
-		solution Xopt;
-		// Tu wpisz kod funkcji
-
+		
+		// Współczynniki adaptacji sigma
+		double alpha = pow(N, -0.5);
+		double beta = pow(2.0 * N, -0.25);
+		
+		// Inicjalizacja populacji rodziców P(0)
+		vector<solution> parent_pop(mi);
+		vector<matrix> sigma_pop(mi);
+		
+		for (int i = 0; i < mi; ++i) {
+			// Losowanie x z przedziału [lb, ub]
+			parent_pop[i].x = rand_mat(N, 1);
+			for (int j = 0; j < N; ++j) {
+				parent_pop[i].x(j) = (ub(j) - lb(j)) * parent_pop[i].x(j) + lb(j);
+			}
+			sigma_pop[i] = sigma0;
+			parent_pop[i].fit_fun(ff, ud1, ud2);
+		}
+		
+		// Główna pętla ewolucyjna
+		while (true) {
+			// Tworzenie koła ruletki
+			vector<double> phi(mi);
+			double Phi = 0.0;
+			
+			for (int j = 0; j < mi; ++j) {
+				phi[j] = 1.0 / (parent_pop[j].y(0, 0));
+				Phi += phi[j];
+			}
+			
+			vector<double> q(mi + 1, 0.0);
+			for (int j = 0; j < mi; ++j) {
+				q[j + 1] = q[j] + phi[j] / Phi;
+			}
+			
+			// Generowanie potomków
+			vector<solution> offspring_pop(lambda);
+			vector<matrix> offspring_sigma(lambda);
+			
+			// Losowanie 'a' stosując rozkład normalny
+			matrix a_vec = randn_mat(1, 1);
+			double a = a_vec(0, 0);
+			
+			for (int j = 0; j < lambda; ++j) {
+				// Losowanie pierwszego rodzica A
+				double r = (double)rand() / RAND_MAX;
+				int k_A = 0;
+				for (int k = 0; k < mi; ++k) {
+					if (r > q[k] && r <= q[k + 1]) {
+						k_A = k;
+						break;
+					}
+				}
+				
+				// Losowanie drugiego rodzica B
+				r = (double)rand() / RAND_MAX;
+				int k_B = 0;
+				for (int k = 0; k < mi; ++k) {
+					if (r > q[k] && r <= q[k + 1]) {
+						k_B = k;
+						break;
+					}
+				}
+				
+				// Krzyżowanie
+				r = (double)rand() / RAND_MAX;
+				offspring_pop[j].x = matrix(N, 1);
+				offspring_sigma[j] = matrix(N, 1);
+				
+				for (int d = 0; d < N; ++d) {
+					offspring_pop[j].x(d) = r * parent_pop[k_A].x(d) + (1.0 - r) * parent_pop[k_B].x(d);
+					offspring_sigma[j](d) = r * sigma_pop[k_A](d) + (1.0 - r) * sigma_pop[k_B](d);
+				}
+				
+				// Mutacja sigma
+				matrix b_vec = randn_mat(1, 1);
+				double b = b_vec(0, 0);
+				for (int d = 0; d < N; ++d) {
+					offspring_sigma[j](d) = offspring_sigma[j](d) * exp(alpha * a + beta * b);
+				}
+				
+				// Mutacja x
+				matrix b_vec_mut = randn_mat(N, 1);
+				for (int d = 0; d < N; ++d) {
+					offspring_pop[j].x(d) = offspring_pop[j].x(d) + b_vec_mut(d) * offspring_sigma[j](d);
+					
+					// Zapewnienie, że potomek mieści się w granicach
+					if (offspring_pop[j].x(d) < lb(d)) offspring_pop[j].x(d) = lb(d);
+					if (offspring_pop[j].x(d) > ub(d)) offspring_pop[j].x(d) = ub(d);
+				}
+				
+				offspring_pop[j].fit_fun(ff, ud1, ud2);
+			}
+			
+			// Strategia (μ+λ): łączymy rodziców i potomków
+			vector<solution> combined_pop = parent_pop;
+			vector<matrix> combined_sigma = sigma_pop;
+			
+			combined_pop.insert(combined_pop.end(), offspring_pop.begin(), offspring_pop.end());
+			combined_sigma.insert(combined_sigma.end(), offspring_sigma.begin(), offspring_sigma.end());
+			
+			// Sortowanie według wartości funkcji celu
+			for (int i = 0; i < mi + lambda - 1; ++i) {
+				for (int j = i + 1; j < mi + lambda; ++j) {
+					if (combined_pop[j].y(0, 0) < combined_pop[i].y(0, 0)) {
+						swap(combined_pop[i], combined_pop[j]);
+						swap(combined_sigma[i], combined_sigma[j]);
+					}
+				}
+			}
+			
+			// Selekcja μ najlepszych osobników
+			parent_pop = vector<solution>(combined_pop.begin(), combined_pop.begin() + mi);
+			sigma_pop = vector<matrix>(combined_sigma.begin(), combined_sigma.begin() + mi);
+			
+			// Najlepszy osobnik
+			Xopt = parent_pop[0];
+			
+			// Sprawdzenie warunku stopu
+			if (solution::f_calls > Nmax) {
+				Xopt.flag = 0;
+				break;
+			}
+			
+			// Warunek stopu - osiągnięto wymaganą dokładność
+			if (Xopt.y(0, 0) < epsilon) {
+				Xopt.flag = 1;
+				break;
+			}
+		}
+		
 		return Xopt;
 	}
 	catch (string ex_info)

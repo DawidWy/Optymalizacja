@@ -1,7 +1,7 @@
 # Kompilator i flagi
 CXX = g++
-CXXFLAGS = -Wpedantic -O3 -std=c++23 
-#CXXFLAGS = -Wpedantic -O0 -g -fno-omit-frame-pointer -std=c++23
+#CXXFLAGS = -Wpedantic -O3 -std=c++23 
+CXXFLAGS = -Wpedantic -O0 -fno-omit-frame-pointer -std=c++23 -g
 
 # Nazwa programu
 TARGET = main
@@ -30,10 +30,10 @@ all: $(TARGET)
 
 # Budowanie programu
 $(TARGET): $(OBJS)
-	$(CXX) $(CXXFLAGS) -I$(INC_DIR) -o bin/$(TARGET) $(OBJS)
+	$(CXX) -I$(INC_DIR) $(CXXFLAGS) -o bin/$(TARGET) $(OBJS)
 
 $(OUT_DIR)/%.o: $(SRC_DIR)/%.cpp
-	$(CXX) $(CXXFLAGS) -I$(INC_DIR) -c $< -o $@
+	$(CXX) -I$(INC_DIR) $(CXXFLAGS) -c $< -o $@
 
 # Utwórz katalog wyjściowy, jeśli nie istnieje
 $(OUT_DIR):
