@@ -930,7 +930,7 @@ void lab5() {
 }
 
 void lab6()
-{
+{/*TEORETYCZNE
     int N = 2;  // 2 wymiary (x1, x2)
     matrix lb(N, 1, -5.0);   // Dolne ograniczenia [-5, -5]
     matrix ub(N, 1, 5.0);    // Górne ograniczenia [5, 5]
@@ -941,7 +941,50 @@ void lab6()
     int mi = 20; //Populacja bazowa
     int lambda = 80; //Populacja przejściowa
     matrix sigma0(N, 1, 1.0); //Współczynnik zakresu mutacji
+    CSVStream csv("lab6.csv", {"Lp", "x1", "x2", "y", "liczba wywolan", "min_glob"}, ',');
+    for(int i=1;i<=100;i++){
+        solution result = EA(ff6T, N, lb, ub, mi, lambda, sigma0, epsilon, Nmax, ud1, ud2);
+        string czy_global;
+        if(abs(result.x(0))<0.001 && abs(result.x(1))<0.001){
+            czy_global="TAK";
+        } else czy_global="NIE";
+        csv<<i<<result.x(0)<<result.x(1)<<result.y(0)<<result.f_calls<<czy_global;
+        solution::clear_calls();
+    }*/
 
-    solution result = EA(ff2T, N, lb, ub, mi, lambda, sigma0, epsilon, Nmax, ud1, ud2);
-    std::cout << result;
+   matrix ud1;
+    try {
+        ud1 = read_ref_data("polozenia.txt");
+        cout << "Wczytano " << get_size(ud1).first << " probek danych." << endl;
+    } catch (string e) {
+        cout << "Blad: " << e << endl;
+        return;
+    }
+    int N = 2;
+    matrix lb(N, 1, 0.1); 
+    matrix ub(N, 1, 3.0); 
+    double epsilon = 1e-6;
+    int Nmax = 10000;
+    int mi = 20, lambda = 80;
+    matrix sigma0(N, 1, 0.5);
+    matrix ud2(1, 1, NAN);
+
+    CSVStream csv("lab6_wyniki.csv", {"b1_opt", "b2_opt", "blad_sumaryczny", "f_calls"}, ',');
+        solution result = EA(ff6R_scalar, N, lb, ub, mi, lambda, sigma0, epsilon, Nmax, ud1, ud2);
+        csv << result.x(0) << result.x(1) << result.y(0) << result.f_calls;
+        solution::clear_calls();
+
+    matrix Y0(4, 1);
+    Y0(0) = 0; Y0(1) = 0; Y0(2) = 0; Y0(3) = 0;
+
+    pair<matrix, matrix> final_sim = solve_ode(df6, 0, 0.1, 100, Y0, result.x, NAN);
+    matrix T = final_sim.first;
+    matrix Y = final_sim.second;
+
+    CSVStream csv_traj("lab6_trajektoria.csv", {"t", "x1", "x2"}, ',');
+    
+    int n_steps = T.n;
+    for (int i = 0; i < n_steps; i++) {
+        csv_traj << T(i) << Y(i, 0) << Y(i, 1);
+    } 
 }

@@ -581,27 +581,37 @@ matrix ff6R(matrix x, matrix ud1, matrix ud2) {
     matrix Y0(4, 1);
     Y0(0) = 0; // x1
     Y0(1) = 0; // x2
-    Y0(3) = 0; // v1
-    Y0(4) = 0; // v2
+    Y0(2) = 0; // v1
+    Y0(3) = 0; // v2
 
 
-    matrix* Y = solve_ode(df6, 0, 0.1, 100, Y0, x, NAN);
+    pair<matrix, matrix> result = solve_ode(df6, 0, 0.1, 100, Y0, x, NAN);
+    matrix Y = result.second;
+    int n = get_len(result.first);
+    int n_ref = ud1.n;
 
-    int n = get_len(Y[0]);
-
-    if (n != get_len(ud1)) {
-        std::cout << "n != pos_ref | n = " << n << " | ud1 (ref) = " << get_len(ud1) << std::endl;
+    if (n != ud1.n) {
+        std::cout << "n != pos_ref | n = " << n << " | ud1 (ref) = " << ud1.n << std::endl;
+        n = min(n, ud1.n);
     }
 
     matrix deviation(2,1);
     deviation(0) = 0;
-    deviation(1) = 1;
+    deviation(1) = 0;
     for (int i = 0; i < n; i++) {
-        deviation(0) += pow(ud1(i,0) - Y[1](i, 0),2);
-        deviation(1) += pow(ud1(i,1) - Y[1](i, 1),2);
+        deviation(0) += pow(ud1(i, 0) - Y(i, 0), 2);
+        deviation(1) += pow(ud1(i, 1) - Y(i, 1), 2);
     }
 
     return deviation;
+}
+
+
+matrix ff6R_scalar(matrix x, matrix ud1, matrix ud2) {
+    matrix dev = ff6R(x, ud1, ud2);
+    matrix res(1, 1);
+    res(0) = dev(0) + dev(1); 
+    return res;
 }
 
 
@@ -634,4 +644,35 @@ matrix df6(double t, matrix Y, matrix ud1, matrix ud2) {
     dY(3) = a2;
 
     return dY;
+}
+
+matrix read_ref_data(string filename) {
+    ifstream file(filename);
+    if (!file.is_open()) {
+        throw string("Nie mozna otworzyc pliku: " + filename);
+    }
+    int rows = 0;
+    string line;
+    while (getline(file, line)) {
+        if (!line.empty()) rows++;
+    }
+    file.clear();
+    file.seekg(0);
+    matrix data(rows, 2);
+    int current_row = 0;
+    while (getline(file, line)) {
+        if (line.empty()) continue;
+        replace(line.begin(), line.end(), ',', '.');
+        replace(line.begin(), line.end(), ';', ' ');
+        stringstream ss(line);
+        double val1, val2;
+        if (ss >> val1 >> val2) {
+            data(current_row, 0) = val1;
+            data(current_row, 1) = val2;
+            current_row++;
+        }
+    }
+
+    file.close();
+    return data;
 }
