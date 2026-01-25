@@ -567,3 +567,71 @@ matrix ff5R(matrix x, matrix ud1, matrix ud2) {
     
     return y;
 }
+
+matrix ff6T(matrix x, matrix ud1, matrix ud2) {
+    // x(0) := [-5 ; 5], x(1) := [-5,5]
+    return x(0) * x(0) + x(1) * x(1) - cos(2.5 * M_PI * x(0)) - cos(2.5 * M_PI * x(1)) + 2;
+}
+
+matrix ff6R(matrix x, matrix ud1, matrix ud2) {
+    //x(0) = b1
+    //x(1) = b2
+    // ud1 = Macierz polozen referencyjnych gdzie kolumny to x1 i x2, a wiersze to pozycja w czasie od t = 0s do t = 100s, dt = 0.1s;
+
+    matrix Y0(4, 1);
+    Y0(0) = 0; // x1
+    Y0(1) = 0; // x2
+    Y0(3) = 0; // v1
+    Y0(4) = 0; // v2
+
+
+    matrix* Y = solve_ode(df6, 0, 0.1, 100, Y0, x, NAN);
+
+    int n = get_len(Y[0]);
+
+    if (n != get_len(ud1)) {
+        std::cout << "n != pos_ref | n = " << n << " | ud1 (ref) = " << get_len(ud1) << std::endl;
+    }
+
+    matrix deviation(2,1);
+    deviation(0) = 0;
+    deviation(1) = 1;
+    for (int i = 0; i < n; i++) {
+        deviation(0) += pow(ud1(i,0) - Y[1](i, 0),2);
+        deviation(1) += pow(ud1(i,1) - Y[1](i, 1),2);
+    }
+
+    return deviation;
+}
+
+
+matrix df6(double t, matrix Y, matrix ud1, matrix ud2) {
+    double x1 = Y(0);
+    double x2 = Y(1);
+
+    double v1 = Y(2);
+    double v2 = Y(3);
+
+    double b1 = ud1(0); // [0.1 ; 3]
+    double b2 = ud1(1); // [0.1 ; 3]
+
+    double F = 5;
+
+    double m1 = 1;
+    double m2 = 2;
+
+    double k1 = 4;
+    double k2 = 6;
+
+    double a1 = -(b1*v1 + b2*(v1-v2) + k1*x1 + k2*(x1-x2)) / m1;
+    double a2 = (F + b2 * (v1 - v2) + k2 * (x1 - x2)) / m2;
+
+    matrix dY(4, 1);
+
+    dY(0) = v1;
+    dY(1) = v2;
+    dY(2) = a1;
+    dY(3) = a2;
+
+    return dY;
+}

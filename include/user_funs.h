@@ -28,3 +28,6 @@ matrix hf4R(matrix theta, matrix X, matrix Y);
 matrix hf4T(matrix x, matrix ud1, matrix ud2);
 matrix ff5T1(matrix x, matrix ud1, matrix ud2);
 matrix ff5R(matrix x, matrix ud1, matrix ud2);
+matrix ff6T(matrix x, matrix ud1, matrix ud2);
+matrix ff6R(matrix x, matrix ud1, matrix ud2);
+matrix df6(double t, matrix Y, matrix ud1, matrix ud2);
